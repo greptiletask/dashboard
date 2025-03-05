@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import axios from "axios";
 import { format } from "date-fns";
 import { toast } from "sonner";
+import { marked } from "marked"; // <-- ADD THIS
 
 import { Button } from "@/components/ui/button";
 import {
@@ -53,7 +54,6 @@ interface DateRange {
   to?: Date;
 }
 
-// Example of your Repo + Changelog types
 interface Repo {
   id: string;
   fullName: string;
@@ -70,7 +70,7 @@ export interface Changelog {
 
 export default function NewChangelogForm() {
   const [isGenerating, setIsGenerating] = useState(false);
-  const [generatedContent, setGeneratedContent] = useState("");
+  const [generatedContent, setGeneratedContent] = useState(""); // store raw Markdown
   const [activeTab, setActiveTab] = useState("edit");
 
   // Repository selection
@@ -80,38 +80,30 @@ export default function NewChangelogForm() {
   // Version
   const [version, setVersion] = useState("");
 
-  // -----------------------------
-  // 1) Date Range
-  // -----------------------------
-  // We store the selected date range in state.
+  // Date Range
   const [dateRange, setDateRange] = useState<DateRange>({
     from: undefined,
     to: undefined,
   });
 
-  // For showing commits in a modal
+  // Commits dialog state
   const [openCommitsModal, setOpenCommitsModal] = useState(false);
-
-  // For fetching commits
   const [commits, setCommits] = useState<any[]>([]);
   const [isFetchingCommits, setIsFetchingCommits] = useState(false);
   const [fetchCommitsError, setFetchCommitsError] = useState<string | null>(
     null
   );
 
+  // -----------------------------
+  // Fetch Commits (Modal)
+  // -----------------------------
   const handleFetchCommits = async () => {
     setIsFetchingCommits(true);
     setFetchCommitsError(null);
-    console.log(
-      dateRange,
-      "DATE RANGE, fetching commits...",
-      selectedRepo,
-      "SELECTED REPO"
-    );
 
     try {
       const response = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/github/commits?&owner=${
+        `${process.env.NEXT_PUBLIC_API_URL}/api/github/commits?owner=${
           selectedRepo.split("/")[0]
         }&repo=${selectedRepo.split("/")[1]}&start=${format(
           dateRange.from!,
@@ -123,7 +115,6 @@ export default function NewChangelogForm() {
           },
         }
       );
-      console.log(response.data, "RESPONSE FROM FETCH COMMITS");
       if (response.data && Array.isArray(response.data)) {
         setCommits(response.data);
       }
@@ -141,7 +132,9 @@ export default function NewChangelogForm() {
     }
   }, [openCommitsModal]);
 
-  // Memoized fetch for Repos
+  // -----------------------------
+  // Fetch Repos
+  // -----------------------------
   const handleFetchRepos = useMemo(
     () => async () => {
       try {
@@ -165,7 +158,6 @@ export default function NewChangelogForm() {
     []
   );
 
-  // Fetch repositories on mount
   useEffect(() => {
     handleFetchRepos();
   }, [handleFetchRepos]);
@@ -178,13 +170,16 @@ export default function NewChangelogForm() {
     }
   }, []);
 
-  // AI generation (mock)
+  // -----------------------------
+  // Generate Changelog with AI
+  // -----------------------------
   const handleGenerateChangelog = async () => {
     if (!selectedRepo || !dateRange.from || !dateRange.to) {
       toast.error("Please select a repository and date range");
       return;
     }
     setIsGenerating(true);
+
     try {
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_API_URL}/api/github/generate-changelog`,
@@ -200,7 +195,7 @@ export default function NewChangelogForm() {
           },
         }
       );
-      console.log(response.data, "RESPONSE FROM GENERATE CHANGELOG");
+      // Suppose response.data.changelog is a JSON string with a "summaryBulletPoints" property
       setGeneratedContent(
         JSON.parse(response.data.changelog).summaryBulletPoints
       );
@@ -212,7 +207,9 @@ export default function NewChangelogForm() {
     }
   };
 
-  // Save as draft
+  // -----------------------------
+  // Save Draft
+  // -----------------------------
   const handleSaveDraft = () => {
     try {
       const newDraft: Changelog = {
@@ -236,7 +233,9 @@ export default function NewChangelogForm() {
     }
   };
 
+  // -----------------------------
   // Publish
+  // -----------------------------
   const handlePublish = async () => {
     try {
       // Typically a POST request to your server
@@ -248,10 +247,8 @@ export default function NewChangelogForm() {
   };
 
   // -----------------------------
-  // 2) Show commits (Modal)
+  // Render
   // -----------------------------
-  // For now, we mock the data. Later you can fetch actual commits based on dateRange & repo.
-
   return (
     <Card className="w-full">
       <CardHeader>
@@ -267,7 +264,6 @@ export default function NewChangelogForm() {
             <Select
               value={selectedRepo}
               onValueChange={(value) => {
-                console.log(value, "VALUE SELECTED");
                 setSelectedRepo(value);
                 localStorage.setItem("selectedRepo", value);
               }}
@@ -340,7 +336,6 @@ export default function NewChangelogForm() {
                     to: dateRange.to,
                   }}
                   onSelect={(range) => {
-                    console.log(range, "RANGESELECTED");
                     setDateRange(range || { from: undefined, to: undefined });
                   }}
                   numberOfMonths={2}
@@ -353,7 +348,6 @@ export default function NewChangelogForm() {
             <Button onClick={() => setOpenCommitsModal(true)}>
               View Commits
             </Button>
-
             <CommitsDialog
               isOpen={openCommitsModal}
               setOpen={setOpenCommitsModal}
@@ -402,7 +396,7 @@ export default function NewChangelogForm() {
             <TabsContent value="edit">
               <Textarea
                 id="content"
-                placeholder="Enter changelog content or generate with AI..."
+                placeholder="Enter or modify your Markdown here..."
                 className="min-h-[300px] font-mono"
                 value={generatedContent}
                 onChange={(e) => setGeneratedContent(e.target.value)}
@@ -421,8 +415,14 @@ export default function NewChangelogForm() {
                   </div>
                   <div className="prose prose-sm dark:prose-invert">
                     {generatedContent ? (
+                      /* 
+                        Here we parse `generatedContent` from Markdown to HTML
+                        using `marked()`, then dangerouslySetInnerHTML to render.
+                      */
                       <div
-                        dangerouslySetInnerHTML={{ __html: generatedContent }}
+                        dangerouslySetInnerHTML={{
+                          __html: marked(generatedContent),
+                        }}
                       />
                     ) : (
                       <p className="text-muted-foreground">
