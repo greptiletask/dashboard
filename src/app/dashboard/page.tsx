@@ -2,12 +2,16 @@
 import { UserButton, useSession } from "@clerk/nextjs";
 import { useUser } from "@clerk/nextjs";
 import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { Loader2 } from "lucide-react";
 export default function Dashboard() {
   const { user, isSignedIn, isLoaded } = useUser();
   const { session } = useSession();
+  const router = useRouter();
   useEffect(() => {
     if (isSignedIn && isLoaded) {
       console.log(user);
+      console.log("calling handleFetchOrCreateUser");
       handleFetchOrCreateUser();
     }
   }, [isLoaded]);
@@ -33,12 +37,14 @@ export default function Dashboard() {
       console.log(data, "data from fetch-or-create-user");
     } catch (error) {
       console.error(error, "error from fetch-or-create-user");
+    } finally {
+      router.push("/dashboard/changelogs");
     }
   };
 
   return (
     <div className="flex justify-start items-start h-screen w-full">
-      Page in dashboard
+      <Loader2 className="animate-spin" />
     </div>
   );
 }

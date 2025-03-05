@@ -52,7 +52,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { state, toggleSidebar } = useSidebar();
   const pathname = usePathname();
   const { user } = useUser();
-  const [selectedProject, setSelectedProject] = useState("My Project");
 
   return (
     <Sidebar {...props}>
@@ -65,11 +64,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               onClick={toggleSidebar}
             >
               <div className="flex items-center">
-                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                  {state === "expanded" ? "R" : ""}
+                <div className="flex aspect-square size-8 bg-[#4ca475] items-center justify-center rounded-lg text-sidebar-primary-foreground">
+                  {state === "expanded" ? "G" : "G"}
                 </div>
                 {state === "expanded" && (
-                  <div className="ml-3 font-semibold">Recurv</div>
+                  <div className="ml-3 font-semibold">Greptile Task</div>
                 )}
               </div>
             </SidebarMenuButton>

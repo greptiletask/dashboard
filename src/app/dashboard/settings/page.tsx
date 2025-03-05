@@ -9,27 +9,18 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
+
 import { Switch } from "@/components/ui/switch";
 import { Github, Globe, LogOut, Moon, Sun } from "lucide-react";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
 export default function SettingsPage() {
   const [isDarkMode, setIsDarkMode] = useState(true);
 
   const handleLogout = () => {
-    // Implement logout logic here
     console.log("Logging out...");
   };
 
   const handleConnectGithub = () => {
-    // Implement GitHub connection logic here
     console.log("Connecting to GitHub...");
   };
 
