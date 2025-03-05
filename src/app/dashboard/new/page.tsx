@@ -45,6 +45,7 @@ import {
   DialogDescription,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import CommitsDialog from "@/components/commits-modal";
 
 // Type for date range used by `react-day-picker` (or shadcn’s `Calendar` in range mode)
 interface DateRange {
@@ -90,6 +91,55 @@ export default function NewChangelogForm() {
 
   // For showing commits in a modal
   const [openCommitsModal, setOpenCommitsModal] = useState(false);
+
+  // For fetching commits
+  const [commits, setCommits] = useState<any[]>([]);
+  const [isFetchingCommits, setIsFetchingCommits] = useState(false);
+  const [fetchCommitsError, setFetchCommitsError] = useState<string | null>(
+    null
+  );
+
+  const handleFetchCommits = async () => {
+    setIsFetchingCommits(true);
+    setFetchCommitsError(null);
+    console.log(
+      dateRange,
+      "DATE RANGE, fetching commits...",
+      selectedRepo,
+      "SELECTED REPO"
+    );
+
+    try {
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/github/commits?&owner=${
+          selectedRepo.split("/")[0]
+        }&repo=${selectedRepo.split("/")[1]}&start=${format(
+          dateRange.from!,
+          "yyyy-MM-dd"
+        )}&end=${format(dateRange.to!, "yyyy-MM-dd")}`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("clerk-authToken")}`,
+          },
+        }
+      );
+      console.log(response.data, "RESPONSE FROM FETCH COMMITS");
+      if (response.data && Array.isArray(response.data)) {
+        setCommits(response.data);
+      }
+    } catch (error) {
+      console.error("Error fetching commits:", error);
+      setFetchCommitsError("Failed to fetch commits");
+    } finally {
+      setIsFetchingCommits(false);
+    }
+  };
+
+  useEffect(() => {
+    if (openCommitsModal) {
+      handleFetchCommits();
+    }
+  }, [openCommitsModal]);
 
   // Memoized fetch for Repos
   const handleFetchRepos = useMemo(
@@ -148,7 +198,7 @@ export default function NewChangelogForm() {
   const handleSaveDraft = () => {
     try {
       const newDraft: Changelog = {
-        userId: "user-123", // Replace with your real user ID
+        userId: "user-123",
         changelog: generatedContent,
         version: version || "v0.0.0",
         repo: selectedRepo,
@@ -183,10 +233,6 @@ export default function NewChangelogForm() {
   // 2) Show commits (Modal)
   // -----------------------------
   // For now, we mock the data. Later you can fetch actual commits based on dateRange & repo.
-  const mockCommits = [
-    { sha: "abc123", message: "First commit", date: "2023-09-01" },
-    { sha: "def456", message: "Second commit", date: "2023-09-02" },
-  ];
 
   return (
     <Card className="w-full">
@@ -203,6 +249,7 @@ export default function NewChangelogForm() {
             <Select
               value={selectedRepo}
               onValueChange={(value) => {
+                console.log(value, "VALUE SELECTED");
                 setSelectedRepo(value);
                 localStorage.setItem("selectedRepo", value);
               }}
@@ -213,7 +260,7 @@ export default function NewChangelogForm() {
               <SelectContent>
                 {repositories && repositories.length > 0 ? (
                   repositories.map((repo) => (
-                    <SelectItem key={repo.id} value={repo.id}>
+                    <SelectItem key={repo.fullName} value={repo.fullName}>
                       <div className="flex items-center">
                         <GitBranch className="mr-2 h-4 w-4" />
                         {repo.fullName}
@@ -285,50 +332,17 @@ export default function NewChangelogForm() {
           </div>
 
           <div className="flex items-end justify-end">
-            <Dialog open={openCommitsModal} onOpenChange={setOpenCommitsModal}>
-              <DialogTrigger asChild>
-                <Button onClick={() => setOpenCommitsModal(true)}>
-                  Show considered commits
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Considered Commits</DialogTitle>
-                  <DialogDescription>
-                    Commits from:
-                    <br />
-                    <strong>
-                      {dateRange?.from
-                        ? format(dateRange.from, "PPP")
-                        : "Not selected"}
-                    </strong>{" "}
-                    to{" "}
-                    <strong>
-                      {dateRange?.to
-                        ? format(dateRange.to, "PPP")
-                        : "Not selected"}
-                    </strong>
-                  </DialogDescription>
-                </DialogHeader>
-                {/* Mock list of commits here */}
-                <div className="space-y-3 mt-4">
-                  {mockCommits.map((commit) => (
-                    <div key={commit.sha} className="border p-2 rounded-md">
-                      <p className="font-medium">{commit.sha}</p>
-                      <p>{commit.message}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {commit.date}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-                <DialogFooter>
-                  <Button onClick={() => setOpenCommitsModal(false)}>
-                    Close
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
+            <Button onClick={() => setOpenCommitsModal(true)}>
+              View Commits
+            </Button>
+
+            <CommitsDialog
+              isOpen={openCommitsModal}
+              setOpen={setOpenCommitsModal}
+              commits={commits}
+              dateRange={dateRange}
+              isFetchingCommits={isFetchingCommits}
+            />
           </div>
         </div>
 
