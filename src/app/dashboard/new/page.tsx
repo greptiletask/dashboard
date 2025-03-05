@@ -2,6 +2,9 @@
 
 import { useState, useEffect, useMemo } from "react";
 import axios from "axios";
+import { format } from "date-fns";
+import { toast } from "sonner";
+
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -22,8 +25,34 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Sparkles, Loader2, GitBranch } from "lucide-react";
-import { toast } from "sonner";
+import { Sparkles, Loader2, GitBranch, CalendarIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+// shadcn date/calendar primitives
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+// shadcn dialog for commits modal
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogFooter,
+  DialogTitle,
+  DialogDescription,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+
+// Type for date range used by `react-day-picker` (or shadcn’s `Calendar` in range mode)
+interface DateRange {
+  from?: Date;
+  to?: Date;
+}
+
+// Example of your Repo + Changelog types
 interface Repo {
   id: string;
   fullName: string;
@@ -43,12 +72,26 @@ export default function NewChangelogForm() {
   const [generatedContent, setGeneratedContent] = useState("");
   const [activeTab, setActiveTab] = useState("edit");
 
-  // For the repo selection
+  // Repository selection
   const [repositories, setRepositories] = useState<Repo[]>([]);
   const [selectedRepo, setSelectedRepo] = useState("");
 
+  // Version
   const [version, setVersion] = useState("");
 
+  // -----------------------------
+  // 1) Date Range
+  // -----------------------------
+  // We store the selected date range in state.
+  const [dateRange, setDateRange] = useState<DateRange>({
+    from: undefined,
+    to: undefined,
+  });
+
+  // For showing commits in a modal
+  const [openCommitsModal, setOpenCommitsModal] = useState(false);
+
+  // Memoized fetch for Repos
   const handleFetchRepos = useMemo(
     () => async () => {
       try {
@@ -62,7 +105,6 @@ export default function NewChangelogForm() {
             },
           }
         );
-        console.log(response.data, "RESPONSE DATA FROM FETCH REPOS");
         if (response.data && Array.isArray(response.data.data)) {
           setRepositories(response.data.data);
         }
@@ -73,10 +115,12 @@ export default function NewChangelogForm() {
     []
   );
 
+  // Fetch repositories on mount
   useEffect(() => {
     handleFetchRepos();
-  }, []);
+  }, [handleFetchRepos]);
 
+  // Load saved repo from localStorage
   useEffect(() => {
     const storedRepo = localStorage.getItem("selectedRepo");
     if (storedRepo) {
@@ -84,10 +128,11 @@ export default function NewChangelogForm() {
     }
   }, []);
 
+  // AI generation (mock)
   const handleGenerateChangelog = async () => {
     setIsGenerating(true);
     try {
-      // Mock delay just to show the spinner
+      // Mock delay just to show spinner
       await new Promise((resolve) => setTimeout(resolve, 1500));
       setGeneratedContent(
         "### Mock AI-generated changelog\n- Added new feature\n- Fixed bugs"
@@ -99,11 +144,11 @@ export default function NewChangelogForm() {
     }
   };
 
+  // Save as draft
   const handleSaveDraft = () => {
     try {
-      // Build the changelog object
       const newDraft: Changelog = {
-        userId: "user-123",
+        userId: "user-123", // Replace with your real user ID
         changelog: generatedContent,
         version: version || "v0.0.0",
         repo: selectedRepo,
@@ -115,8 +160,6 @@ export default function NewChangelogForm() {
         localStorage.getItem("draft-changelogs") || "[]"
       );
       storedDrafts.push(newDraft);
-
-      // Save back to localStorage
       localStorage.setItem("draft-changelogs", JSON.stringify(storedDrafts));
 
       toast.success("Draft saved successfully!");
@@ -125,14 +168,11 @@ export default function NewChangelogForm() {
     }
   };
 
-  // -----------------------------
-  // 4. Publish Changelog
-  // -----------------------------
+  // Publish
   const handlePublish = async () => {
     try {
-      // ...logic to publish. Typically a POST request to your server.
+      // Typically a POST request to your server
       // e.g. await axios.post(...);
-
       alert("Changelog published!");
     } catch (error) {
       console.error("Error publishing changelog:", error);
@@ -140,8 +180,14 @@ export default function NewChangelogForm() {
   };
 
   // -----------------------------
-  // 5. Render
+  // 2) Show commits (Modal)
   // -----------------------------
+  // For now, we mock the data. Later you can fetch actual commits based on dateRange & repo.
+  const mockCommits = [
+    { sha: "abc123", message: "First commit", date: "2023-09-01" },
+    { sha: "def456", message: "Second commit", date: "2023-09-02" },
+  ];
+
   return (
     <Card className="w-full">
       <CardHeader>
@@ -158,7 +204,6 @@ export default function NewChangelogForm() {
               value={selectedRepo}
               onValueChange={(value) => {
                 setSelectedRepo(value);
-                // Store in localStorage so it persists
                 localStorage.setItem("selectedRepo", value);
               }}
             >
@@ -193,6 +238,96 @@ export default function NewChangelogForm() {
               value={version}
               onChange={(e) => setVersion(e.target.value)}
             />
+          </div>
+        </div>
+
+        {/* Row for Date Range & Show Commits Button */}
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label>Date Range</Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn(
+                    "w-[260px] justify-start text-left font-normal",
+                    !dateRange?.from && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {dateRange?.from
+                    ? dateRange.to
+                      ? `${format(dateRange.from, "LLL dd, y")} - ${format(
+                          dateRange.to,
+                          "LLL dd, y"
+                        )}`
+                      : format(dateRange.from, "LLL dd, y")
+                    : "Pick a date range"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  initialFocus
+                  mode="range"
+                  defaultMonth={dateRange?.from}
+                  selected={{
+                    from: dateRange.from,
+                    to: dateRange.to,
+                  }}
+                  onSelect={(range) =>
+                    setDateRange(range || { from: undefined, to: undefined })
+                  }
+                  numberOfMonths={2}
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
+
+          <div className="flex items-end justify-end">
+            <Dialog open={openCommitsModal} onOpenChange={setOpenCommitsModal}>
+              <DialogTrigger asChild>
+                <Button onClick={() => setOpenCommitsModal(true)}>
+                  Show considered commits
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Considered Commits</DialogTitle>
+                  <DialogDescription>
+                    Commits from:
+                    <br />
+                    <strong>
+                      {dateRange?.from
+                        ? format(dateRange.from, "PPP")
+                        : "Not selected"}
+                    </strong>{" "}
+                    to{" "}
+                    <strong>
+                      {dateRange?.to
+                        ? format(dateRange.to, "PPP")
+                        : "Not selected"}
+                    </strong>
+                  </DialogDescription>
+                </DialogHeader>
+                {/* Mock list of commits here */}
+                <div className="space-y-3 mt-4">
+                  {mockCommits.map((commit) => (
+                    <div key={commit.sha} className="border p-2 rounded-md">
+                      <p className="font-medium">{commit.sha}</p>
+                      <p>{commit.message}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {commit.date}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+                <DialogFooter>
+                  <Button onClick={() => setOpenCommitsModal(false)}>
+                    Close
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </div>
         </div>
 

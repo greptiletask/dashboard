@@ -7,6 +7,8 @@ import {
   Settings,
   Plus,
   Save,
+  Globe,
+  Sparkles,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -38,7 +40,7 @@ const data = {
         {
           title: "Generate Changelog",
           url: "/dashboard/new",
-          icon: Plus,
+          icon: Sparkles,
         },
         {
           title: "Changelogs",
@@ -49,6 +51,11 @@ const data = {
           title: "Drafts",
           url: "/dashboard/drafts",
           icon: Save,
+        },
+        {
+          title: "Domains",
+          url: "/dashboard/domains",
+          icon: Globe,
         },
         {
           title: "Settings",
