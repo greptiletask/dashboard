@@ -180,15 +180,33 @@ export default function NewChangelogForm() {
 
   // AI generation (mock)
   const handleGenerateChangelog = async () => {
+    if (!selectedRepo || !dateRange.from || !dateRange.to) {
+      toast.error("Please select a repository and date range");
+      return;
+    }
     setIsGenerating(true);
     try {
-      // Mock delay just to show spinner
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/github/generate-changelog`,
+        {
+          owner: selectedRepo.split("/")[0],
+          repo: selectedRepo.split("/")[1],
+          start: format(dateRange.from!, "yyyy-MM-dd"),
+          end: format(dateRange.to!, "yyyy-MM-dd"),
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("clerk-authToken")}`,
+          },
+        }
+      );
+      console.log(response.data, "RESPONSE FROM GENERATE CHANGELOG");
       setGeneratedContent(
-        "### Mock AI-generated changelog\n- Added new feature\n- Fixed bugs"
+        JSON.parse(response.data.changelog).summaryBulletPoints
       );
     } catch (error) {
       console.error("Error generating changelog:", error);
+      toast.error("Error generating changelog");
     } finally {
       setIsGenerating(false);
     }
