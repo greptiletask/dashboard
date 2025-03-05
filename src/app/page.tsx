@@ -8,7 +8,7 @@ export default function Home() {
     handleAuthState();
   }, []);
   const handleAuthState = () => {
-    if (localStorage.getItem("authToken")) {
+    if (localStorage.getItem("clerk-authToken")) {
       router.push("/dashboard");
     } else {
       router.push(process.env.NEXT_PUBLIC_CLERK_SIGN_IN_URL as string);
