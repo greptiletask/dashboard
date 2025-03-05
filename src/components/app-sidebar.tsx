@@ -1,17 +1,6 @@
 import type * as React from "react";
 import { useState } from "react";
-import {
-  FileText,
-  Home,
-  SettingsIcon,
-  Laptop2,
-  Settings,
-  Code,
-  Key,
-  Book,
-  ChevronDown,
-  Sparkles,
-} from "lucide-react";
+import { FileText, Home, SettingsIcon, Settings, Plus } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { UserButton, useUser } from "@clerk/nextjs";
@@ -40,47 +29,19 @@ const data = {
       icon: Home,
       items: [
         {
-          title: "Reports",
-          url: "/dashboard/reports",
+          title: "Generate Changelog",
+          url: "/dashboard/new",
+          icon: Plus,
+        },
+        {
+          title: "Changelogs",
+          url: "/dashboard/changelogs",
           icon: FileText,
-        },
-        {
-          title: "Feature Requests",
-          url: "/dashboard/feature-requests",
-          icon: Sparkles,
-        },
-        {
-          title: "Projects",
-          url: "/dashboard/projects",
-          icon: Laptop2,
         },
         {
           title: "Settings",
-          url: "/settings",
+          url: "/dashboard/settings",
           icon: Settings,
-        },
-      ],
-    },
-    {
-      title: "Developer",
-      url: "/developer",
-      icon: Code,
-      items: [
-        {
-          title: "API Keys",
-          url: "/developer/keys",
-          icon: Key,
-        },
-        {
-          title: "Documentation",
-          url: "https://docs.recurv.dev",
-          icon: Book,
-          external: true,
-        },
-        {
-          title: "Logs",
-          url: "/developer/logs",
-          icon: FileText,
         },
       ],
     },

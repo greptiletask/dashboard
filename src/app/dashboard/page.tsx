@@ -17,7 +17,7 @@ export default function Dashboard() {
       skipCache: true,
     });
     console.log(token, "tokenFROM");
-    localStorage.setItem("authToken", token!);
+    localStorage.setItem("clerk-authToken", token!);
     try {
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/user/fetch-or-create`,
@@ -25,7 +25,7 @@ export default function Dashboard() {
           method: "GET",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+            Authorization: `Bearer ${localStorage.getItem("clerk-authToken")}`,
           },
         }
       );

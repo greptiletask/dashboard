@@ -2,13 +2,15 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useUser } from "@clerk/nextjs";
 export default function Home() {
   const router = useRouter();
+  const { user, isLoaded, isSignedIn } = useUser();
   useEffect(() => {
     handleAuthState();
-  }, []);
+  }, [isLoaded]);
   const handleAuthState = () => {
-    if (localStorage.getItem("clerk-authToken")) {
+    if (isSignedIn) {
       router.push("/dashboard");
     } else {
       router.push(process.env.NEXT_PUBLIC_CLERK_SIGN_IN_URL as string);
