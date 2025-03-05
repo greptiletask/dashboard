@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
+import axios from "axios";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -22,80 +23,185 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Sparkles, Loader2, GitBranch } from "lucide-react";
+import { toast } from "sonner";
+interface Repo {
+  id: string;
+  fullName: string;
+}
 
-// Mock data for repositories
-const repositories = [
-  { id: "1", name: "my-awesome-project" },
-  { id: "2", name: "cool-new-app" },
-  { id: "3", name: "super-library" },
-];
+export interface Changelog {
+  userId: string;
+  changelog: string;
+  version: string;
+  repo: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
 
 export default function NewChangelogForm() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedContent, setGeneratedContent] = useState("");
   const [activeTab, setActiveTab] = useState("edit");
 
-  const handleGenerate = () => {
+  // For the repo selection
+  const [repositories, setRepositories] = useState<Repo[]>([]);
+  const [selectedRepo, setSelectedRepo] = useState("");
+
+  const [version, setVersion] = useState("");
+
+  const handleFetchRepos = useMemo(
+    () => async () => {
+      try {
+        const response = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/github/repos`,
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem(
+                "clerk-authToken"
+              )}`,
+            },
+          }
+        );
+        console.log(response.data, "RESPONSE DATA FROM FETCH REPOS");
+        if (response.data && Array.isArray(response.data.data)) {
+          setRepositories(response.data.data);
+        }
+      } catch (error) {
+        console.error("Error fetching repositories:", error);
+      }
+    },
+    []
+  );
+
+  useEffect(() => {
+    handleFetchRepos();
+  }, []);
+
+  useEffect(() => {
+    const storedRepo = localStorage.getItem("selectedRepo");
+    if (storedRepo) {
+      setSelectedRepo(storedRepo);
+    }
+  }, []);
+
+  const handleGenerateChangelog = async () => {
     setIsGenerating(true);
-    // Simulate AI generation
-    setTimeout(() => {
-      setGeneratedContent(`
-# New Features
-- Implemented user authentication system
-- Added dark mode support
-- Introduced new dashboard widgets
-
-# Improvements
-- Enhanced performance of data loading
-- Updated UI components for better accessibility
-- Refactored codebase for improved maintainability
-
-# Bug Fixes
-- Fixed issue with form submission on Safari
-- Resolved data synchronization problems
-- Corrected styling inconsistencies in mobile view
-      `);
+    try {
+      // Mock delay just to show the spinner
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+      setGeneratedContent(
+        "### Mock AI-generated changelog\n- Added new feature\n- Fixed bugs"
+      );
+    } catch (error) {
+      console.error("Error generating changelog:", error);
+    } finally {
       setIsGenerating(false);
-      setActiveTab("preview");
-    }, 2000);
+    }
   };
 
+  const handleSaveDraft = () => {
+    try {
+      // Build the changelog object
+      const newDraft: Changelog = {
+        userId: "user-123",
+        changelog: generatedContent,
+        version: version || "v0.0.0",
+        repo: selectedRepo,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      const storedDrafts = JSON.parse(
+        localStorage.getItem("draft-changelogs") || "[]"
+      );
+      storedDrafts.push(newDraft);
+
+      // Save back to localStorage
+      localStorage.setItem("draft-changelogs", JSON.stringify(storedDrafts));
+
+      toast.success("Draft saved successfully!");
+    } catch (error) {
+      console.error("Error saving draft:", error);
+    }
+  };
+
+  // -----------------------------
+  // 4. Publish Changelog
+  // -----------------------------
+  const handlePublish = async () => {
+    try {
+      // ...logic to publish. Typically a POST request to your server.
+      // e.g. await axios.post(...);
+
+      alert("Changelog published!");
+    } catch (error) {
+      console.error("Error publishing changelog:", error);
+    }
+  };
+
+  // -----------------------------
+  // 5. Render
+  // -----------------------------
   return (
     <Card className="w-full">
       <CardHeader>
         <CardTitle>New Changelog Entry</CardTitle>
       </CardHeader>
+
       <CardContent className="space-y-6">
+        {/* Row for Repository + Version */}
         <div className="grid grid-cols-2 gap-4">
+          {/* Repository */}
           <div className="space-y-2">
             <Label htmlFor="repository">Repository</Label>
-            <Select>
-              <SelectTrigger>
+            <Select
+              value={selectedRepo}
+              onValueChange={(value) => {
+                setSelectedRepo(value);
+                // Store in localStorage so it persists
+                localStorage.setItem("selectedRepo", value);
+              }}
+            >
+              <SelectTrigger className="w-[100%]">
                 <SelectValue placeholder="Select repository" />
               </SelectTrigger>
               <SelectContent>
-                {repositories.map((repo) => (
-                  <SelectItem key={repo.id} value={repo.id}>
-                    <div className="flex items-center">
-                      <GitBranch className="mr-2 h-4 w-4" />
-                      {repo.name}
-                    </div>
+                {repositories && repositories.length > 0 ? (
+                  repositories.map((repo) => (
+                    <SelectItem key={repo.id} value={repo.id}>
+                      <div className="flex items-center">
+                        <GitBranch className="mr-2 h-4 w-4" />
+                        {repo.fullName}
+                      </div>
+                    </SelectItem>
+                  ))
+                ) : (
+                  <SelectItem value="no-repos">
+                    No repositories found
                   </SelectItem>
-                ))}
+                )}
               </SelectContent>
             </Select>
           </div>
+
+          {/* Version */}
           <div className="space-y-2">
             <Label htmlFor="version">Version</Label>
-            <Input id="version" placeholder="e.g. v1.0.0" />
+            <Input
+              id="version"
+              placeholder="e.g. v1.0.0"
+              value={version}
+              onChange={(e) => setVersion(e.target.value)}
+            />
           </div>
         </div>
 
+        {/* Changelog Content */}
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <Label htmlFor="content">Changelog Content</Label>
             <Button
-              onClick={handleGenerate}
+              onClick={handleGenerateChangelog}
               disabled={isGenerating}
               size="sm"
               className="bg-primary hover:bg-primary/90"
@@ -113,6 +219,7 @@ export default function NewChangelogForm() {
               )}
             </Button>
           </div>
+
           <Tabs
             value={activeTab}
             onValueChange={setActiveTab}
@@ -122,6 +229,8 @@ export default function NewChangelogForm() {
               <TabsTrigger value="edit">Edit</TabsTrigger>
               <TabsTrigger value="preview">Preview</TabsTrigger>
             </TabsList>
+
+            {/* EDIT TAB */}
             <TabsContent value="edit">
               <Textarea
                 id="content"
@@ -131,17 +240,17 @@ export default function NewChangelogForm() {
                 onChange={(e) => setGeneratedContent(e.target.value)}
               />
             </TabsContent>
+
+            {/* PREVIEW TAB */}
             <TabsContent value="preview">
               <Card className="bg-secondary/50 border-none">
-                <CardHeader className="pb-3">
-                  <div className="flex items-center gap-3">
-                    <Badge>v1.0.0</Badge>
+                <div className="p-4">
+                  <div className="flex items-center gap-3 mb-3">
+                    <Badge>{version || "v0.0.0"}</Badge>
                     <span className="text-sm text-muted-foreground">
-                      Minor Release
+                      Draft Preview
                     </span>
                   </div>
-                </CardHeader>
-                <CardContent>
                   <div className="prose prose-sm dark:prose-invert">
                     {generatedContent ? (
                       <div
@@ -153,15 +262,22 @@ export default function NewChangelogForm() {
                       </p>
                     )}
                   </div>
-                </CardContent>
+                </div>
               </Card>
             </TabsContent>
           </Tabs>
         </div>
       </CardContent>
+
+      {/* FOOTER ACTIONS */}
       <CardFooter className="flex justify-between">
-        <Button variant="outline">Save as Draft</Button>
-        <Button className="bg-primary hover:bg-primary/90">
+        <Button variant="outline" onClick={handleSaveDraft}>
+          Save as Draft
+        </Button>
+        <Button
+          className="bg-primary hover:bg-primary/90"
+          onClick={handlePublish}
+        >
           Publish Changelog
         </Button>
       </CardFooter>

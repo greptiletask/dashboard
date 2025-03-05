@@ -1,6 +1,13 @@
 import type * as React from "react";
 import { useState } from "react";
-import { FileText, Home, SettingsIcon, Settings, Plus } from "lucide-react";
+import {
+  FileText,
+  Home,
+  SettingsIcon,
+  Settings,
+  Plus,
+  Save,
+} from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { UserButton, useUser } from "@clerk/nextjs";
@@ -37,6 +44,11 @@ const data = {
           title: "Changelogs",
           url: "/dashboard/changelogs",
           icon: FileText,
+        },
+        {
+          title: "Drafts",
+          url: "/dashboard/drafts",
+          icon: Save,
         },
         {
           title: "Settings",
