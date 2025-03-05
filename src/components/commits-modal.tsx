@@ -13,6 +13,8 @@ import {
   ExternalLink,
   Copy,
   Check,
+  Search,
+  X,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -33,6 +35,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { Input } from "@/components/ui/input";
 
 // Helper function to determine commit type and icon
 const getCommitTypeInfo = (message: string) => {
@@ -88,12 +91,24 @@ export default function CommitsDialog({
   isFetchingCommits: boolean;
 }) {
   const [copiedSha, setCopiedSha] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const copyToClipboard = (sha: string) => {
     navigator.clipboard.writeText(sha);
     setCopiedSha(sha);
     setTimeout(() => setCopiedSha(null), 2000);
   };
+
+  // Filter commits based on search query
+  const filteredCommits = commits.filter((commit) => {
+    const query = searchQuery.toLowerCase();
+    return (
+      commit.sha.toLowerCase().includes(query) ||
+      commit.commit.message.toLowerCase().includes(query) ||
+      commit.commit.author.name.toLowerCase().includes(query) ||
+      formatCommitDate(commit.commit.author.date).toLowerCase().includes(query)
+    );
+  });
 
   return (
     <Dialog open={isOpen} onOpenChange={setOpen}>
@@ -128,117 +143,161 @@ export default function CommitsDialog({
               </DialogDescription>
             </DialogHeader>
 
-            <div className="flex-1 overflow-y-auto pr-2 mt-4">
-              <div className="space-y-4">
-                {commits.map((commit) => {
-                  const {
-                    type,
-                    icon: TypeIcon,
-                    color,
-                  } = getCommitTypeInfo(commit.commit.message);
-                  const shortSha = commit.sha.substring(0, 7);
-                  const commitDate = commit.commit.author.date;
-                  const authorName = commit.commit.author.name;
-                  const avatarUrl = commit.author?.avatar_url;
+            <div className="relative mt-4 mb-4">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder="Search commits by message, author, SHA or date..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10 pr-10"
+              />
+              {searchQuery && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2"
+                  onClick={() => setSearchQuery("")}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
 
-                  return (
-                    <div
-                      key={commit.sha}
-                      className="border rounded-lg overflow-hidden bg-card shadow-sm"
-                    >
-                      <div className="p-4">
-                        <div className="flex items-start justify-between mb-3">
-                          <div className="flex items-center gap-2">
-                            <Badge
-                              variant="outline"
-                              className={`flex items-center gap-1 ${color}`}
-                            >
-                              <TypeIcon className="h-3 w-3" />
-                              <span>{type}</span>
-                            </Badge>
+            <div className="flex-1 overflow-y-auto pr-2">
+              <div className="space-y-4">
+                {filteredCommits.length > 0 ? (
+                  filteredCommits.map((commit) => {
+                    const {
+                      type,
+                      icon: TypeIcon,
+                      color,
+                    } = getCommitTypeInfo(commit.commit.message);
+                    const shortSha = commit.sha.substring(0, 7);
+                    const commitDate = commit.commit.author.date;
+                    const authorName = commit.commit.author.name;
+                    const avatarUrl = commit.author?.avatar_url;
+
+                    return (
+                      <div
+                        key={commit.sha}
+                        className="border rounded-lg overflow-hidden bg-card shadow-sm"
+                      >
+                        <div className="p-4">
+                          <div className="flex items-start justify-between mb-3">
+                            <div className="flex items-center gap-2">
+                              <Badge
+                                variant="outline"
+                                className={`flex items-center gap-1 ${color}`}
+                              >
+                                <TypeIcon className="h-3 w-3" />
+                                <span>{type}</span>
+                              </Badge>
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-6 px-2 font-mono text-xs"
+                                      onClick={() =>
+                                        copyToClipboard(commit.sha)
+                                      }
+                                    >
+                                      {shortSha}
+                                      {copiedSha === commit.sha ? (
+                                        <Check className="ml-1 h-3 w-3" />
+                                      ) : (
+                                        <Copy className="ml-1 h-3 w-3 opacity-70" />
+                                      )}
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    {copiedSha === commit.sha
+                                      ? "Copied!"
+                                      : "Copy full SHA"}
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            </div>
                             <TooltipProvider>
                               <Tooltip>
                                 <TooltipTrigger asChild>
                                   <Button
                                     variant="ghost"
-                                    size="sm"
-                                    className="h-6 px-2 font-mono text-xs"
-                                    onClick={() => copyToClipboard(commit.sha)}
+                                    size="icon"
+                                    className="h-6 w-6"
+                                    asChild
                                   >
-                                    {shortSha}
-                                    {copiedSha === commit.sha ? (
-                                      <Check className="ml-1 h-3 w-3" />
-                                    ) : (
-                                      <Copy className="ml-1 h-3 w-3 opacity-70" />
-                                    )}
+                                    <a
+                                      href={commit.html_url}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                    >
+                                      <ExternalLink className="h-3 w-3" />
+                                    </a>
                                   </Button>
                                 </TooltipTrigger>
-                                <TooltipContent>
-                                  {copiedSha === commit.sha
-                                    ? "Copied!"
-                                    : "Copy full SHA"}
-                                </TooltipContent>
+                                <TooltipContent>View on GitHub</TooltipContent>
                               </Tooltip>
                             </TooltipProvider>
                           </div>
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-6 w-6"
-                                  asChild
-                                >
-                                  <a
-                                    href={commit.html_url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                  >
-                                    <ExternalLink className="h-3 w-3" />
-                                  </a>
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent>View on GitHub</TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                        </div>
 
-                        <h3 className="text-base font-medium mb-3">
-                          {commit.commit.message}
-                        </h3>
+                          <h3 className="text-base font-medium mb-3">
+                            {commit.commit.message}
+                          </h3>
 
-                        <div className="flex items-center justify-between text-sm text-muted-foreground">
-                          <div className="flex items-center gap-2">
-                            <Avatar className="h-6 w-6">
-                              <AvatarImage src={avatarUrl} alt={authorName} />
-                              <AvatarFallback className="text-xs">
-                                {authorName
-                                  .split(" ")
-                                  .map((n: string) => n[0])
-                                  .join("")}
-                              </AvatarFallback>
-                            </Avatar>
+                          <div className="flex items-center justify-between text-sm text-muted-foreground">
+                            <div className="flex items-center gap-2">
+                              <Avatar className="h-6 w-6">
+                                <AvatarImage src={avatarUrl} alt={authorName} />
+                                <AvatarFallback className="text-xs">
+                                  {authorName
+                                    .split(" ")
+                                    .map((n: string) => n[0])
+                                    .join("")}
+                                </AvatarFallback>
+                              </Avatar>
+                              <span className="flex items-center gap-1">
+                                <User className="h-3 w-3" />
+                                {authorName}
+                              </span>
+                            </div>
                             <span className="flex items-center gap-1">
-                              <User className="h-3 w-3" />
-                              {authorName}
+                              <Clock className="h-3 w-3" />
+                              {formatCommitDate(commitDate)}
                             </span>
                           </div>
-                          <span className="flex items-center gap-1">
-                            <Clock className="h-3 w-3" />
-                            {formatCommitDate(commitDate)}
-                          </span>
                         </div>
                       </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-8 text-center">
+                    <GitCommit className="h-12 w-12 text-muted-foreground/50 mb-4" />
+                    <h3 className="text-lg font-medium">
+                      No matching commits found
+                    </h3>
+                    <p className="text-muted-foreground mt-1">
+                      Try adjusting your search query
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
 
             <DialogFooter className="mt-4 pt-2 border-t">
               <div className="text-xs text-muted-foreground mr-auto">
-                Showing {commits.length} commit{commits.length !== 1 ? "s" : ""}
+                {searchQuery ? (
+                  <>
+                    Showing {filteredCommits.length} of {commits.length} commit
+                    {commits.length !== 1 ? "s" : ""}
+                  </>
+                ) : (
+                  <>
+                    Showing {commits.length} commit
+                    {commits.length !== 1 ? "s" : ""}
+                  </>
+                )}
               </div>
               <Button onClick={() => setOpen(false)}>Close</Button>
             </DialogFooter>
