@@ -13,6 +13,8 @@ export default function Dashboard() {
       console.log(user);
       console.log("calling handleFetchOrCreateUser");
       handleFetchOrCreateUser();
+    } else {
+      router.push("/sign-in");
     }
   }, [isLoaded]);
 

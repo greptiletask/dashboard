@@ -22,20 +22,8 @@ import { useUser } from "@clerk/nextjs";
 export default function Layout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const { isSignedIn, isLoaded } = useUser();
-
-  const handleAuthState = () => {
-    if (!isSignedIn) {
-      router.push(process.env.NEXT_PUBLIC_CLERK_SIGN_IN_URL as string);
-    } else {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    handleAuthState();
-  }, [isLoaded]);
 
   const generateBreadcrumbs = () => {
     const pathSegments = pathname.split("/").filter(Boolean);

@@ -51,6 +51,7 @@ export default function SettingsPage() {
   }, []);
 
   const handleExchangeToken = async (code: string) => {
+    console.log(code, "CODE");
     if (!code) return;
     setLoading(true);
     try {
@@ -63,21 +64,19 @@ export default function SettingsPage() {
           },
         }
       );
-      if (response.data.data) {
-        console.log(
-          "response.data.data from exchange token",
-          response.data.data
-        );
-        localStorage.setItem("gh_token", response.data.data.access_token);
+      console.log("response from exchange token", response.data);
+      if (response.data) {
+        console.log("response.data.data from exchange token", response.data);
+        localStorage.setItem("gh_token", response.data.access_token);
 
         setIsGithubConnected(true);
+        handleFetchGHUser(localStorage.getItem("gh_token") as string);
       }
     } catch (error) {
       console.error("Error exchanging token:", error);
     } finally {
       setLoading(false);
-      router.replace("/settings");
-      handleFetchGHUser(localStorage.getItem("gh_token") as string);
+      router.replace("/dashboard/settings");
     }
   };
 
@@ -92,8 +91,8 @@ export default function SettingsPage() {
         }
       );
       console.log("response.data.data from fetch gh user", response.data.data);
-      if (response.data.data) {
-        setGithubData(response.data.data);
+      if (response.data) {
+        setGithubData(response.data);
       }
     } catch (error) {
       console.error("Error fetching GitHub user:", error);
@@ -129,9 +128,13 @@ export default function SettingsPage() {
     setGithubData({});
   };
 
-  if (!user) {
-    return null;
-  }
+  // if (!user) {
+  //   return null;
+  // }
+
+  useEffect(() => {
+    console.log(githubData, "GITHUB DATA");
+  }, [githubData]);
 
   return (
     <div className="container mx-auto py-10 space-y-10">
@@ -156,7 +159,7 @@ export default function SettingsPage() {
                 </p>
               </div>
               <Button
-                className="w-fit"
+                className="w-fit cursor-pointer"
                 onClick={handleGithubAuth}
                 disabled={loading}
               >
@@ -185,13 +188,13 @@ export default function SettingsPage() {
               {isGithubConnected && (
                 <>
                   <Button
-                    className="w-full"
+                    className="w-fit cursor-pointer"
                     onClick={handleUpdateGithubSettings}
                   >
                     Update GitHub Settings
                   </Button>
                   <Button
-                    className="w-full border-red-500 text-red-500 hover:border hover:border-red-500 hover:text-red-500"
+                    className="w-fit cursor-pointer border-red-500 text-red-500 hover:border hover:border-red-500 hover:text-red-500"
                     onClick={handleDisconnectGithub}
                   >
                     Disconnect Github
