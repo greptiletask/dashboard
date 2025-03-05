@@ -274,9 +274,10 @@ export default function NewChangelogForm() {
                     from: dateRange.from,
                     to: dateRange.to,
                   }}
-                  onSelect={(range) =>
-                    setDateRange(range || { from: undefined, to: undefined })
-                  }
+                  onSelect={(range) => {
+                    console.log(range, "RANGESELECTED");
+                    setDateRange(range || { from: undefined, to: undefined });
+                  }}
                   numberOfMonths={2}
                 />
               </PopoverContent>
