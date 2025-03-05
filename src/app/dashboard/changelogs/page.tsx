@@ -89,7 +89,6 @@ export default function ChangelogsPage() {
                 <TableHead>Version</TableHead>
                 <TableHead>Title</TableHead>
                 <TableHead>Date</TableHead>
-                <TableHead>Type</TableHead>
                 <TableHead className="text-right">Action</TableHead>
               </TableRow>
             </TableHeader>
@@ -101,19 +100,7 @@ export default function ChangelogsPage() {
                   </TableCell>
                   <TableCell>{changelog.title}</TableCell>
                   <TableCell>{changelog.date}</TableCell>
-                  <TableCell>
-                    <Badge
-                      variant={
-                        changelog.type === "major"
-                          ? "default"
-                          : changelog.type === "minor"
-                          ? "secondary"
-                          : "outline"
-                      }
-                    >
-                      {changelog.type}
-                    </Badge>
-                  </TableCell>
+
                   <TableCell className="text-right">
                     <Button
                       variant="ghost"
