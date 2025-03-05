@@ -251,9 +251,9 @@ export default function NewChangelogForm() {
   // -----------------------------
   return (
     <Card className="w-full">
-      <CardHeader>
+      {/* <CardHeader>
         <CardTitle>New Changelog Entry</CardTitle>
-      </CardHeader>
+      </CardHeader> */}
 
       <CardContent className="space-y-6">
         {/* Row for Repository + Version */}
@@ -397,7 +397,7 @@ export default function NewChangelogForm() {
               <Textarea
                 id="content"
                 placeholder="Enter or modify your Markdown here..."
-                className="min-h-[300px] font-mono"
+                className="min-h-[275px] font-mono"
                 value={generatedContent}
                 onChange={(e) => setGeneratedContent(e.target.value)}
               />
