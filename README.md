@@ -32,6 +32,7 @@ CLERK_SECRET_KEY=sk_test_VDtYDmJFDEZoHCnxzdQCAW482yiCIEzXrkZkA80nS8
 NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in
 NEXT_PUBLIC_API_URL=http://localhost:8001
 ```
+(The keys here are inserted for example, and they have been rotated for no malicious use)
 ## Installation 
 
 `npm run install`
