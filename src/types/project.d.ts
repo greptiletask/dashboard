@@ -4,6 +4,7 @@ export interface Project {
   updatedAt: Date;
   customDomain: string;
   isDomainVerified: boolean;
+  verificationToken: string;
   slug: string;
   userId: string;
 }
