@@ -56,7 +56,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             {/* Main area on the right */}
             <div className="flex flex-1 flex-col relative">
               {/* Sticky header at the top of the main column */}
-              <header className="sticky top-0 z-50 flex h-16 items-center gap-2 bg-inherit px-4">
+              <header className="sticky top-0 z-50 flex h-16 items-center gap-2 bg-inherit px-6">
                 {/* SidebarTrigger if you need mobile toggling, etc. */}
                 <SidebarTrigger className="-ml-2" />
 
@@ -80,7 +80,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               </header>
 
               {/* Main content area below header */}
-              <main className="flex-1 w-full overflow-auto p-4">
+              <main className="flex-1 w-full overflow-auto p-4 px-6">
                 {children}
               </main>
             </div>

@@ -53,9 +53,9 @@ export default function ChangelogsPage() {
   };
 
   return (
-    <div className="container mx-auto py-10 space-y-10">
+    <div className="container mx-auto py-0 space-y-10">
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">Changelogs</h1>
+        <h1 className="text-3xl font-bold">Drafts</h1>
         <Link href="/dashboard/new">
           <Button className="bg-sidebar text-primary hover:bg-sidebar/80">
             <Plus className="mr-2 h-4 w-4" />
