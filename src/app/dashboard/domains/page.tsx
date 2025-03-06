@@ -16,7 +16,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Plus, ExternalLink, Github } from "lucide-react";
+import { Plus, ExternalLink, Github, Loader2 } from "lucide-react";
 
 /**
  * Example shape from your backend:
@@ -42,6 +42,7 @@ interface ProjectItem {
 export default function DomainsPage() {
   const router = useRouter();
   const [projects, setProjects] = useState<ProjectItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   // -----------------------------------------
   // 1) useMemo for fetch function
@@ -50,6 +51,7 @@ export default function DomainsPage() {
     () => async () => {
       try {
         // Adjust to match your actual endpoint
+        setIsLoading(true);
         const response = await axios.get(
           `${process.env.NEXT_PUBLIC_API_URL}/api/changelog/projects`,
           {
@@ -60,10 +62,11 @@ export default function DomainsPage() {
             },
           }
         );
-        // Suppose the response looks like { projects: ProjectItem[] }
         setProjects(response.data.projects || []);
       } catch (error) {
         console.error("Error fetching projects:", error);
+      } finally {
+        setIsLoading(false);
       }
     },
     []
@@ -116,52 +119,63 @@ export default function DomainsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {projects.map((project) => {
-                // If customDomain is empty, show fallback domain
-                const domainToShow = project.customDomain
-                  ? project.customDomain
-                  : `greptile-changelogs.com/${project.slug}`;
+              {isLoading ? (
+                <TableRow className="w-full">
+                  <TableCell colSpan={4} className="text-center mx-auto w-full">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  </TableCell>
+                </TableRow>
+              ) : (
+                projects.length > 0 &&
+                projects.map((project) => {
+                  // If customDomain is empty, show fallback domain
+                  const domainToShow = project.customDomain
+                    ? project.customDomain
+                    : `greptile-changelogs.com/${project.slug}`;
 
-                // Determine status
-                const isCustom =
-                  project.customDomain && project.customDomain !== "";
-                const domainStatus = isCustom ? "Active" : "Default";
+                  // Determine status
+                  const isCustom =
+                    project.customDomain && project.customDomain !== "";
+                  const domainStatus = isCustom ? "Active" : "Default";
 
-                return (
-                  <TableRow
-                    key={project.slug}
-                    onClick={() => handleRowClick(project.slug)}
-                    className="cursor-pointer hover:bg-muted"
-                  >
-                    <TableCell className="font-medium">{project.slug}</TableCell>
-                    <TableCell>
-                      <div className="flex items-center">
-                        <Github className="mr-2 h-4 w-4" />
-                        {project.repoFullName}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      {isCustom ? (
+                  return (
+                    <TableRow
+                      key={project.slug}
+                      onClick={() => handleRowClick(project.slug)}
+                      className="cursor-pointer hover:bg-muted"
+                    >
+                      <TableCell className="font-medium">
+                        {project.slug}
+                      </TableCell>
+                      <TableCell>
                         <div className="flex items-center">
-                          {domainToShow}
-                          <ExternalLink className="ml-2 h-4 w-4 text-muted-foreground" />
+                          <Github className="mr-2 h-4 w-4" />
+                          {project.repoFullName}
                         </div>
-                      ) : (
-                        <span className="text-muted-foreground">
-                          {domainToShow}
-                        </span>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      {isCustom ? (
-                        <Badge variant="default">{domainStatus}</Badge>
-                      ) : (
-                        <Badge variant="outline">{domainStatus}</Badge>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
+                      </TableCell>
+                      <TableCell>
+                        {isCustom ? (
+                          <div className="flex items-center">
+                            {domainToShow}
+                            <ExternalLink className="ml-2 h-4 w-4 text-muted-foreground" />
+                          </div>
+                        ) : (
+                          <span className="text-muted-foreground">
+                            {domainToShow}
+                          </span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {isCustom ? (
+                          <Badge variant="default">{domainStatus}</Badge>
+                        ) : (
+                          <Badge variant="outline">{domainStatus}</Badge>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
+              )}
             </TableBody>
           </Table>
         </CardContent>
