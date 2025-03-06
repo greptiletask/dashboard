@@ -1,6 +1,11 @@
 "use client";
 
-import * as React from "react";
+import React, { useState } from "react";
+import { usePathname } from "next/navigation";
+import { useRouter } from "next/navigation";
+import { useUser } from "@clerk/nextjs";
+import { Loader2 } from "lucide-react";
+
 import { AppSidebar } from "@/components/app-sidebar";
 import {
   Breadcrumb,
@@ -9,22 +14,20 @@ import {
   BreadcrumbList,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import {
-  SidebarInset,
-  SidebarProvider,
-  SidebarTrigger,
-} from "@/components/ui/sidebar";
-import { usePathname } from "next/navigation";
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import { Loader2 } from "lucide-react";
-import { useUser } from "@clerk/nextjs";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+
+/**
+ * A layout that places the AppSidebar on the left,
+ * and the Header + Content on the right. The header
+ * won't spill over the sidebar.
+ */
 export default function Layout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const { isSignedIn, isLoaded } = useUser();
 
+  // Build breadcrumb data from the path
   const generateBreadcrumbs = () => {
     const pathSegments = pathname.split("/").filter(Boolean);
     return pathSegments.map((segment, index) => {
@@ -36,20 +39,28 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     });
   };
 
+  // Layout: left sidebar, right column with header + main
   return (
     <SidebarProvider>
-      <div className="flex w-screen h-screen justify-start items-start">
+      <div className="flex h-screen w-screen">
+        {/* LOADING SCREEN */}
         {loading ? (
-          <div className="flex justify-center items-center h-full w-full">
+          <div className="flex w-full h-full items-center justify-center">
             <Loader2 className="animate-spin" />
           </div>
         ) : (
           <>
+            {/* Sidebar on the left */}
             <AppSidebar />
-            <SidebarInset className="flex-1 items-start justify-start">
-              <header className="fixed top-0 flex h-16 shrink-0 items-center gap-2 bg-inherit px-4 w-full z-50">
+
+            {/* Main area on the right */}
+            <div className="flex flex-1 flex-col relative">
+              {/* Sticky header at the top of the main column */}
+              <header className="sticky top-0 z-50 flex h-16 items-center gap-2 bg-inherit px-4">
+                {/* SidebarTrigger if you need mobile toggling, etc. */}
                 <SidebarTrigger className="-ml-2" />
-                {/* <Separator orientation="vertical" className="h-6" /> */}
+
+                {/* Breadcrumb */}
                 <Breadcrumb>
                   <BreadcrumbList>
                     {generateBreadcrumbs().map((breadcrumb, index) => (
@@ -67,10 +78,12 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                   </BreadcrumbList>
                 </Breadcrumb>
               </header>
-              <main className="flex-1 px-4 w-full h-content flex justify-start items-start mt-16">
+
+              {/* Main content area below header */}
+              <main className="flex-1 w-full overflow-auto p-4">
                 {children}
               </main>
-            </SidebarInset>
+            </div>
           </>
         )}
       </div>

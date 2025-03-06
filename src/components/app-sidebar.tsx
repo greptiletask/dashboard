@@ -74,12 +74,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
   return (
     <Sidebar {...props}>
-      <SidebarHeader className="z-50">
+      <SidebarHeader className="z-100">
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton
               size="lg"
-              className="w-full justify-between"
+              className="w-full justify-between z-50"
               onClick={toggleSidebar}
             >
               <div className="flex items-center">
