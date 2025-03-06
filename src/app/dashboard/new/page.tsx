@@ -6,7 +6,7 @@ import axios from "axios";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { marked } from "marked";
-import { v4 as uuidv4 } from "uuid"; // For creating unique draft IDs
+import { v4 as uuidv4 } from "uuid";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
@@ -31,7 +31,7 @@ import {
 } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import CommitsDialog from "@/components/commits-modal";
-import slugify from "slugify";
+
 interface DateRange {
   from?: Date;
   to?: Date;
@@ -43,10 +43,6 @@ interface Repo {
 }
 
 export interface Changelog {
-  /**
-   * A unique ID for this draft. We'll store it so we can find & update the
-   * same draft if user continues editing.
-   */
   draftId: string;
   title: string;
   userId: string;
@@ -61,17 +57,18 @@ export default function NewChangelogForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // 1) If user is editing an existing draft, we get a "draftId" in the URL
+  // If user is editing an existing draft, we get a "draftId" in the URL
   const urlDraftId = searchParams.get("draftId") || null;
 
-  // State for form fields
+  // State
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isPublishing, setIsPublishing] = useState(false);
   const [activeTab, setActiveTab] = useState("edit");
 
   const [repositories, setRepositories] = useState<Repo[]>([]);
   const [selectedRepo, setSelectedRepo] = useState("");
   const [version, setVersion] = useState("");
-  const [generatedContent, setGeneratedContent] = useState(""); // raw Markdown
+  const [generatedContent, setGeneratedContent] = useState("");
   const [title, setTitle] = useState("");
 
   // For date range
@@ -80,18 +77,22 @@ export default function NewChangelogForm() {
     to: undefined,
   });
 
-  // Commits dialog
+  // For commits dialog
   const [openCommitsModal, setOpenCommitsModal] = useState(false);
   const [commits, setCommits] = useState<any[]>([]);
   const [isFetchingCommits, setIsFetchingCommits] = useState(false);
 
+  // For identifying the draft
   const [draftId, setDraftId] = useState<string | null>(urlDraftId);
 
+  // -----------------------------
+  // 1) Load Existing Draft if present
+  // -----------------------------
   useEffect(() => {
     if (urlDraftId) {
       loadExistingDraft(urlDraftId);
     }
-  }, []);
+  }, [urlDraftId]);
 
   const loadExistingDraft = (id: string) => {
     const storedDrafts = JSON.parse(
@@ -103,31 +104,36 @@ export default function NewChangelogForm() {
       setSelectedRepo(existingDraft.repo || "");
       setVersion(existingDraft.version || "");
       setGeneratedContent(existingDraft.changelog || "");
+      setTitle(existingDraft.title || "");
     } else {
       toast.error("Draft not found.");
     }
   };
 
+  // -----------------------------
+  // 2) Auto-Save Draft on Changes
+  // -----------------------------
   useEffect(() => {
     const hasAnyContent =
-      selectedRepo.trim() || version.trim() || generatedContent.trim();
+      selectedRepo.trim() ||
+      version.trim() ||
+      generatedContent.trim() ||
+      title.trim();
 
     if (!hasAnyContent) {
       return;
     }
-
     autoSaveDraft();
-  }, [selectedRepo, version, generatedContent]);
+  }, [selectedRepo, version, generatedContent, title]);
 
   const autoSaveDraft = () => {
-    let storedDrafts = JSON.parse(
+    const storedDrafts = JSON.parse(
       localStorage.getItem("draft-changelogs") || "[]"
     ) as Changelog[];
 
     if (draftId) {
       const index = storedDrafts.findIndex((d) => d.draftId === draftId);
       if (index !== -1) {
-        // Update
         storedDrafts[index] = {
           ...storedDrafts[index],
           changelog: generatedContent,
@@ -137,7 +143,7 @@ export default function NewChangelogForm() {
           updatedAt: new Date().toISOString(),
         };
       } else {
-        // If user typed a draftId that doesn't exist, create new
+        // Not found => create new
         const newDraft: Changelog = {
           draftId,
           userId: "user-123",
@@ -151,6 +157,7 @@ export default function NewChangelogForm() {
         storedDrafts.push(newDraft);
       }
     } else {
+      // No draftId => create new
       const newId = uuidv4();
       setDraftId(newId);
 
@@ -171,8 +178,12 @@ export default function NewChangelogForm() {
   };
 
   // -----------------------------
-  // C. FETCH REPOS & COMMITS
+  // 3) Fetch Repos
   // -----------------------------
+  useEffect(() => {
+    handleFetchRepos();
+  }, []);
+
   const handleFetchRepos = async () => {
     try {
       const response = await axios.get(
@@ -191,10 +202,9 @@ export default function NewChangelogForm() {
     }
   };
 
-  useEffect(() => {
-    handleFetchRepos();
-  }, []);
-
+  // -----------------------------
+  // 4) Fetch Commits
+  // -----------------------------
   const handleFetchCommits = async () => {
     setIsFetchingCommits(true);
     try {
@@ -232,7 +242,7 @@ export default function NewChangelogForm() {
   }, [openCommitsModal]);
 
   // -----------------------------
-  // D. GENERATE CHANGELOG WITH AI
+  // 5) Generate Changelog (AI)
   // -----------------------------
   const handleGenerateChangelog = async () => {
     if (!version || !selectedRepo || !dateRange.from || !dateRange.to) {
@@ -242,24 +252,23 @@ export default function NewChangelogForm() {
     setIsGenerating(true);
 
     try {
+      const [owner, repo] = selectedRepo.split("/");
+      const start = format(dateRange.from!, "yyyy-MM-dd");
+      const end = format(dateRange.to!, "yyyy-MM-dd");
+
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_API_URL}/api/github/generate-changelog`,
-        {
-          owner: selectedRepo.split("/")[0],
-          repo: selectedRepo.split("/")[1],
-          start: format(dateRange.from!, "yyyy-MM-dd"),
-          end: format(dateRange.to!, "yyyy-MM-dd"),
-        },
+        { owner, repo, start, end },
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("clerk-authToken")}`,
           },
         }
       );
-      setGeneratedContent(
-        JSON.parse(response.data.changelog).summaryBulletPoints
-      );
-      setTitle(JSON.parse(response.data.changelog).title);
+
+      const parsed = JSON.parse(response.data.changelog);
+      setGeneratedContent(parsed.summaryBulletPoints);
+      setTitle(parsed.title || "");
     } catch (error) {
       console.error("Error generating changelog:", error);
       toast.error("Error generating changelog");
@@ -269,25 +278,23 @@ export default function NewChangelogForm() {
   };
 
   // -----------------------------
-  // E. EXPLICIT "SAVE AS DRAFT"
+  // 6) Explicit "Save as Draft"
   // -----------------------------
-  // This is effectively the same as autoSave but we show a success toast
   const handleSaveDraft = () => {
     autoSaveDraft();
     toast.success("Draft saved successfully!");
   };
 
   // -----------------------------
-  // F. PUBLISH
+  // 7) Publish (and remove from drafts)
   // -----------------------------
-
-  const [isPublishing, setIsPublishing] = useState(false);
   const handlePublish = async () => {
     if (!selectedRepo || !version || !generatedContent) {
       toast.error("The changelog cannot be empty");
       return;
     }
     setIsPublishing(true);
+
     try {
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_API_URL}/api/changelog`,
@@ -304,13 +311,28 @@ export default function NewChangelogForm() {
           },
         }
       );
+
       console.log(response.data, "response from publish");
       toast.success("Changelog published successfully!");
+
+      // Remove this draft from localStorage if it exists
+      if (draftId) {
+        let storedDrafts = JSON.parse(
+          localStorage.getItem("draft-changelogs") || "[]"
+        ) as Changelog[];
+        storedDrafts = storedDrafts.filter((d) => d.draftId !== draftId);
+        localStorage.setItem("draft-changelogs", JSON.stringify(storedDrafts));
+      }
+
       // Clear form fields
       setSelectedRepo("");
       setVersion("");
+      setTitle("");
       setGeneratedContent("");
       setDateRange({ from: undefined, to: undefined });
+      setDraftId(null);
+
+      // Redirect to main changelogs page
       router.push("/dashboard/changelogs");
     } catch (error) {
       console.error("Error publishing changelog:", error);
@@ -428,6 +450,17 @@ export default function NewChangelogForm() {
           </div>
         </div>
 
+        {/* Title Input */}
+        <div className="space-y-2">
+          <Label htmlFor="title">Title</Label>
+          <Input
+            id="title"
+            placeholder="e.g. Security Updates and New Integrations"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+          />
+        </div>
+
         {/* Changelog Content */}
         <div className="space-y-2">
           <div className="flex items-center justify-between">
@@ -511,6 +544,7 @@ export default function NewChangelogForm() {
         <Button
           className="bg-sidebar text-primary hover:bg-sidebar/80"
           onClick={handlePublish}
+          disabled={isPublishing}
         >
           {isPublishing ? (
             <>

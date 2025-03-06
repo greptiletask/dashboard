@@ -15,6 +15,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { useParams } from "next/navigation";
+import { Project } from "@/types/project";
+
 export default function CustomDomainPage() {
   const [domain, setDomain] = useState("");
   const [isVerifying, setIsVerifying] = useState(false);
@@ -22,15 +24,26 @@ export default function CustomDomainPage() {
     "idle" | "success" | "error"
   >("idle");
 
+  const [project, setProject] = useState<Project | null>(null);
+
   const params = useParams();
-  const projectSlug = params.projectSlug as string;
+  const projectSlug = params.projectId as string;
+
+  const [isAddingDomain, setIsAddingDomain] = useState(false);
 
   const handleFetchProject = async (projectSlug: string) => {
+    console.log("[FETCH PROJECT]: PROJECT SLUG", projectSlug);
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/api/changelog/projects/${projectSlug}`
+      `${process.env.NEXT_PUBLIC_API_URL}/api/changelog/projects/${projectSlug}`,
+      {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("clerk-authToken")}`,
+        },
+      }
     );
     const data = await response.json();
     console.log(data, "data from project!");
+    setProject(data.project);
   };
 
   useEffect(() => {
@@ -38,11 +51,26 @@ export default function CustomDomainPage() {
   }, [projectSlug]);
 
   const handleAddDomain = async () => {
-    setIsVerifying(true);
-    setTimeout(() => {
-      setIsVerifying(false);
-      setVerificationStatus(Math.random() > 0.5 ? "success" : "error");
-    }, 2000);
+    try {
+      setIsAddingDomain(true);
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/changelog/projects/${projectSlug}/domains`,
+        {
+          method: "POST",
+          body: JSON.stringify({ domain, projectSlug }),
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("clerk-authToken")}`,
+          },
+        }
+      );
+      const data = await response.json();
+      console.log(data, "data from add domain!");
+      setProject(data.project);
+    } catch (error) {
+      console.error(error, "error from add domain!");
+    } finally {
+      setIsAddingDomain(false);
+    }
   };
 
   return (
@@ -134,7 +162,8 @@ export default function CustomDomainPage() {
               <div className="flex items-center space-x-4">
                 <Globe className="h-5 w-5 text-muted-foreground" />
                 <span className="font-medium">
-                  greptilechangelogs.com/your-project-id
+                  {project?.customDomain ||
+                    `greptilechangelogs.com/${project?.slug}`}
                 </span>
               </div>
               <span className="text-sm text-muted-foreground">Default</span>
