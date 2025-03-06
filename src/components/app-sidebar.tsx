@@ -84,10 +84,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             >
               <div className="flex items-center">
                 <div className="flex aspect-square size-8 bg-[#4ca475] items-center justify-center rounded-lg text-sidebar-primary-foreground">
-                  {state === "expanded" ? "G" : "G"}
+                  {state === "expanded" ? "A" : "A"}
                 </div>
                 {state === "expanded" && (
-                  <div className="ml-3 font-semibold">Greptile Task</div>
+                  <div className="ml-3 font-semibold">AutoCL</div>
                 )}
               </div>
             </SidebarMenuButton>
