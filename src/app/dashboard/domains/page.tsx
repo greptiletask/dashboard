@@ -120,7 +120,7 @@ export default function DomainsPage() {
                 projects.map((project) => {
                   const domainToShow = project.customDomain
                     ? project.customDomain
-                    : `greptile-changelogs.com/${project.slug}`;
+                    : `https://autocl.live/${project.slug}`;
                   const isCustom =
                     project.customDomain && project.customDomain !== "";
                   const domainStatus = isCustom ? "Active" : "Default";
