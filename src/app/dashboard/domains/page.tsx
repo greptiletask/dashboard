@@ -16,20 +16,9 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Plus, ExternalLink, Github, Loader2 } from "lucide-react";
+import { Plus, ExternalLink, Github } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton"; // Import Skeleton here
 
-/**
- * Example shape from your backend:
- * {
- *   "_id": { "$oid": "67c8ed805d4b6e43b5668d27" },
- *   "userId": "user_2tt3W9HDx36wQzPSwzNnfF9vHKQ",
- *   "repoFullName": "10DollarJob/marketplace",
- *   "customDomain": "",
- *   "isDomainVerified": false,
- *   "slug": "10dollarjob-marketplace",
- *   ...
- * }
- */
 interface ProjectItem {
   userId: string;
   repoFullName: string;
@@ -44,13 +33,10 @@ export default function DomainsPage() {
   const [projects, setProjects] = useState<ProjectItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // -----------------------------------------
-  // 1) useMemo for fetch function
-  // -----------------------------------------
+  // Memoized fetch
   const fetchProjects = useMemo(
     () => async () => {
       try {
-        // Adjust to match your actual endpoint
         setIsLoading(true);
         const response = await axios.get(
           `${process.env.NEXT_PUBLIC_API_URL}/api/changelog/projects`,
@@ -72,24 +58,16 @@ export default function DomainsPage() {
     []
   );
 
-  // -----------------------------------------
-  // 2) Call the memoized fetch on mount
-  // -----------------------------------------
+  // Fetch on mount
   useEffect(() => {
     fetchProjects();
   }, [fetchProjects]);
 
-  // -----------------------------------------
-  // 3) Row click => navigate
-  // -----------------------------------------
+  // Row click => navigate
   const handleRowClick = (projectId: string) => {
-    // Navigate to /dashboard/domains/[projectId]
     router.push(`/dashboard/domains/${projectId}`);
   };
 
-  // -----------------------------------------
-  // RENDER
-  // -----------------------------------------
   return (
     <div className="container mx-auto py-0 space-y-10">
       {/* Page Header */}
@@ -112,28 +90,38 @@ export default function DomainsPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Project ID</TableHead>
                 <TableHead>Project</TableHead>
+                <TableHead>Repository</TableHead>
                 <TableHead>Domain</TableHead>
                 <TableHead>Status</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {isLoading ? (
-                <TableRow className="w-full">
-                  <TableCell colSpan={4} className="text-center mx-auto w-full">
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  </TableCell>
-                </TableRow>
-              ) : (
-                projects.length > 0 &&
+                // Display multiple skeleton rows while loading
+                <>
+                  {Array.from({ length: 4 }).map((_, i) => (
+                    <TableRow key={i}>
+                      <TableCell>
+                        <Skeleton className="h-4 w-24" />
+                      </TableCell>
+                      <TableCell>
+                        <Skeleton className="h-4 w-40" />
+                      </TableCell>
+                      <TableCell>
+                        <Skeleton className="h-4 w-40" />
+                      </TableCell>
+                      <TableCell>
+                        <Skeleton className="h-4 w-16" />
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </>
+              ) : projects.length > 0 ? (
                 projects.map((project) => {
-                  // If customDomain is empty, show fallback domain
                   const domainToShow = project.customDomain
                     ? project.customDomain
                     : `greptile-changelogs.com/${project.slug}`;
-
-                  // Determine status
                   const isCustom =
                     project.customDomain && project.customDomain !== "";
                   const domainStatus = isCustom ? "Active" : "Default";
@@ -175,6 +163,13 @@ export default function DomainsPage() {
                     </TableRow>
                   );
                 })
+              ) : (
+                // No projects found after loading
+                <TableRow>
+                  <TableCell colSpan={4} className="text-center py-6">
+                    No projects found.
+                  </TableCell>
+                </TableRow>
               )}
             </TableBody>
           </Table>
