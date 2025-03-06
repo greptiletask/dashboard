@@ -31,7 +31,7 @@ import {
 } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import CommitsDialog from "@/components/commits-modal";
-
+import slugify from "slugify";
 interface DateRange {
   from?: Date;
   to?: Date;
@@ -84,20 +84,14 @@ export default function NewChangelogForm() {
   const [commits, setCommits] = useState<any[]>([]);
   const [isFetchingCommits, setIsFetchingCommits] = useState(false);
 
-  // 2) Local state for the "current" draft ID. If null => we haven't saved yet.
   const [draftId, setDraftId] = useState<string | null>(urlDraftId);
 
   useEffect(() => {
-    // If we have a ?draftId in the URL, load that draft from localStorage.
-    // (But only on initial mount.)
     if (urlDraftId) {
       loadExistingDraft(urlDraftId);
     }
   }, []);
 
-  // -----------------------------
-  // A. LOADING AN EXISTING DRAFT
-  // -----------------------------
   const loadExistingDraft = (id: string) => {
     const storedDrafts = JSON.parse(
       localStorage.getItem("draft-changelogs") || "[]"
@@ -113,14 +107,7 @@ export default function NewChangelogForm() {
     }
   };
 
-  // -----------------------------
-  // B. AUTO-SAVE ON EVERY CHANGE
-  // -----------------------------
-  // We'll watch for any form changes. If we have a `draftId`, update that draft.
-  // If we have no `draftId`, create a new one the first time a user types.
   useEffect(() => {
-    // We'll skip if the user hasn't typed anything at all
-    // e.g. `selectedRepo`, `version`, `generatedContent` are all blank
     const hasAnyContent =
       selectedRepo.trim() || version.trim() || generatedContent.trim();
 
@@ -136,7 +123,6 @@ export default function NewChangelogForm() {
       localStorage.getItem("draft-changelogs") || "[]"
     ) as Changelog[];
 
-    // If we already have a draftId, update that existing draft
     if (draftId) {
       const index = storedDrafts.findIndex((d) => d.draftId === draftId);
       if (index !== -1) {
@@ -162,7 +148,6 @@ export default function NewChangelogForm() {
         storedDrafts.push(newDraft);
       }
     } else {
-      // draftId is null => first time saving
       const newId = uuidv4();
       setDraftId(newId);
 
@@ -176,10 +161,6 @@ export default function NewChangelogForm() {
         updatedAt: new Date().toISOString(),
       };
       storedDrafts.push(newDraft);
-
-      // Optionally update the URL with the new draftId so user can refresh
-      // or share link. e.g.:
-      // router.replace(`/dashboard/new?draftId=${newId}`);
     }
 
     localStorage.setItem("draft-changelogs", JSON.stringify(storedDrafts));
@@ -296,8 +277,25 @@ export default function NewChangelogForm() {
   // -----------------------------
   const handlePublish = async () => {
     try {
-      // e.g. await axios.post(...);
-      alert("Changelog published!");
+      const response = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/changelog`,
+        {
+          changelog: generatedContent,
+          version,
+          repo: selectedRepo,
+          projectSlug: slugify(selectedRepo, {
+            lower: true,
+            strict: true,
+            replacement: "-",
+            remove: /\/+/g,
+          }),
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("clerk-authToken")}`,
+          },
+        }
+      );
     } catch (error) {
       console.error("Error publishing changelog:", error);
     }

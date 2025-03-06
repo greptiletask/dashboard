@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,7 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
+import axios from "axios";
 // Mock data for projects
 const projects = [
   { id: "all", name: "All Projects" },
@@ -78,6 +78,32 @@ const changelogs = [
 export default function ChangelogsPage() {
   const [selectedChangelog, setSelectedChangelog] = useState(null);
   const [selectedProject, setSelectedProject] = useState("all");
+  const [projects, setProjects] = useState([]);
+  const [changelogs, setChangelogs] = useState([]);
+
+  const loadProjects = async () => {
+    const response = await axios.get(
+      `${process.env.NEXT_PUBLIC_API_URL}/api/changelog/projects`
+    );
+
+    setProjects(response.data);
+    setSelectedProject(response.data[0].slug);
+  };
+
+  const loadChangelogs = async () => {
+    const response = await axios.get(
+      `${process.env.NEXT_PUBLIC_API_URL}/api/changelog/projects/${selectedProject}`
+    );
+    setChangelogs(response.data);
+  };
+
+  useEffect(() => {
+    loadProjects();
+  }, []);
+
+  useEffect(() => {
+    loadChangelogs();
+  }, [selectedProject]);
 
   const handleOpenModal = (changelog: any) => {
     setSelectedChangelog(changelog);
@@ -87,13 +113,9 @@ export default function ChangelogsPage() {
     setSelectedChangelog(null);
   };
 
-  // Filter changelogs based on selected project
-  const filteredChangelogs =
-    selectedProject === "all"
-      ? changelogs
-      : changelogs.filter(
-          (changelog) => changelog.projectId === selectedProject
-        );
+  const handleProjectChange = (value: string) => {
+    setSelectedProject(value);
+  };
 
   return (
     <div className="container mx-auto py-10 space-y-10">
@@ -101,14 +123,14 @@ export default function ChangelogsPage() {
         <h1 className="text-3xl font-bold">Changelogs</h1>
         <div className="flex items-center gap-4">
           <div className="w-[220px]">
-            <Select value={selectedProject} onValueChange={setSelectedProject}>
+            <Select value={selectedProject} onValueChange={handleProjectChange}>
               <SelectTrigger className="w-[220px]">
                 <SelectValue placeholder="Select project" />
               </SelectTrigger>
               <SelectContent className="w-[220px]">
-                {projects.map((project) => (
+                {projects.map((project: any) => (
                   <SelectItem key={project.id} value={project.id}>
-                    {project.name}
+                    {project.repoFullName}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -128,9 +150,7 @@ export default function ChangelogsPage() {
           <CardTitle>
             {selectedProject === "all"
               ? "All Changelogs"
-              : `Changelogs for ${
-                  projects.find((p) => p.id === selectedProject)?.name
-                }`}
+              : `Changelogs for ${selectedProject}`}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -144,8 +164,8 @@ export default function ChangelogsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredChangelogs.length > 0 ? (
-                filteredChangelogs.map((changelog) => (
+              {changelogs.length > 0 ? (
+                changelogs.map((changelog: any) => (
                   <TableRow key={changelog.id}>
                     <TableCell className="font-medium">
                       {changelog.version}
