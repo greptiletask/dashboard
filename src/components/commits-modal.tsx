@@ -112,7 +112,7 @@ export default function CommitsDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={setOpen}>
-      <DialogContent className="max-w-[90vw] max-h-[80vh] overflow-hidden flex flex-col">
+      <DialogContent className="min-w-[70vw] max-h-[80vh] overflow-hidden flex flex-col">
         {isFetchingCommits ? (
           <div className="flex items-center justify-center h-40">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />

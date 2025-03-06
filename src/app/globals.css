@@ -119,12 +119,15 @@
 @layer base {
   button {
     @apply cursor-pointer;
-    @apply bg-sidebar text-primary hover:bg-sidebar/80;
+    /* @apply bg-sidebar text-primary hover:bg-sidebar/80; */
   }
   * {
     @apply border-border outline-ring/50;
   }
   body {
     @apply bg-background text-foreground;
+  }
+  .markdown-content p {
+    margin-bottom: 1rem; /* Adds space between paragraphs */
   }
 }

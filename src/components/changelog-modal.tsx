@@ -36,10 +36,10 @@ export function ChangelogModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[625px]">
+      <DialogContent className="min-w-[80vw]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            {changelog.version}
+            {changelog.title}
             <Badge
               variant={
                 changelog.type === "major"
@@ -63,12 +63,17 @@ export function ChangelogModal({
             })}
           </p>
           <div
-            className="prose prose-sm dark:prose-invert max-w-none"
+            className="prose prose-sm dark:prose-invert max-w-none markdown-content"
             dangerouslySetInnerHTML={{ __html: marked(content) }}
           />
         </div>
         <DialogFooter>
-          <Button onClick={onClose}>Close</Button>
+          <Button
+            onClick={onClose}
+            className="bg-sidebar text-primary hover:bg-sidebar/80"
+          >
+            Close
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

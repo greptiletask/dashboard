@@ -485,10 +485,9 @@ export default function NewChangelogForm() {
                   <div className="prose prose-sm dark:prose-invert">
                     {generatedContent ? (
                       <div
+                        className="markdown-content"
                         dangerouslySetInnerHTML={{
-                          __html: marked(
-                            generatedContent.replace(/\n\n/g, "<br><br>")
-                          ),
+                          __html: marked(generatedContent),
                         }}
                       />
                     ) : (
