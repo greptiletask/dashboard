@@ -308,10 +308,18 @@ export default function CustomDomainPage() {
                 </div>
               ) : (
                 <div className="flex items-center justify-between p-4 bg-muted rounded-md">
-                  <div className="flex items-center space-x-4">
+                  <div
+                    className="flex items-center space-x-4 cursor-pointer"
+                    onClick={() => {
+                      window.open(
+                        `https://autocl.live/${project.slug}`,
+                        "_blank"
+                      );
+                    }}
+                  >
                     <Globe className="h-5 w-5 text-muted-foreground" />
                     <span className="font-medium">
-                      greptilechangelogs.com/{project.slug}
+                      https://autocl.live/{project.slug}
                     </span>
                   </div>
                   <span className="text-sm text-muted-foreground">Default</span>
