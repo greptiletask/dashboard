@@ -119,6 +119,7 @@
 @layer base {
   button {
     @apply cursor-pointer;
+    @apply bg-sidebar text-primary hover:bg-sidebar/80;
   }
   * {
     @apply border-border outline-ring/50;

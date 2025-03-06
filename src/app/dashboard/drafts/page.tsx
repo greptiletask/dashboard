@@ -57,7 +57,7 @@ export default function ChangelogsPage() {
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">Changelogs</h1>
         <Link href="/dashboard/new">
-          <Button>
+          <Button className="bg-sidebar text-primary hover:bg-sidebar/80">
             <Plus className="mr-2 h-4 w-4" />
             New Changelog
           </Button>

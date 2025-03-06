@@ -47,7 +47,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           <>
             <AppSidebar />
             <SidebarInset className="flex-1 items-start justify-start">
-              <header className="fixed top-0 z-10 flex h-16 shrink-0 items-center gap-2 bg-background px-4 w-full">
+              <header className="fixed top-0 flex h-16 shrink-0 items-center gap-2 bg-inherit px-4 w-full z-50">
                 <SidebarTrigger className="-ml-2" />
                 {/* <Separator orientation="vertical" className="h-6" /> */}
                 <Breadcrumb>

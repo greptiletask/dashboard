@@ -48,7 +48,7 @@ export interface Changelog {
    * same draft if user continues editing.
    */
   draftId: string;
-
+  title: string;
   userId: string;
   changelog: string; // The raw Markdown
   version: string;
@@ -72,6 +72,7 @@ export default function NewChangelogForm() {
   const [selectedRepo, setSelectedRepo] = useState("");
   const [version, setVersion] = useState("");
   const [generatedContent, setGeneratedContent] = useState(""); // raw Markdown
+  const [title, setTitle] = useState("");
 
   // For date range
   const [dateRange, setDateRange] = useState<DateRange>({
@@ -131,6 +132,7 @@ export default function NewChangelogForm() {
           ...storedDrafts[index],
           changelog: generatedContent,
           version,
+          title,
           repo: selectedRepo,
           updatedAt: new Date().toISOString(),
         };
@@ -141,6 +143,7 @@ export default function NewChangelogForm() {
           userId: "user-123",
           changelog: generatedContent,
           version: version || "v0.0.0",
+          title,
           repo: selectedRepo,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
@@ -156,6 +159,7 @@ export default function NewChangelogForm() {
         userId: "user-123",
         changelog: generatedContent,
         version: version || "v0.0.0",
+        title: title || "",
         repo: selectedRepo,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
@@ -231,8 +235,8 @@ export default function NewChangelogForm() {
   // D. GENERATE CHANGELOG WITH AI
   // -----------------------------
   const handleGenerateChangelog = async () => {
-    if (!selectedRepo || !dateRange.from || !dateRange.to) {
-      toast.error("Please select a repository and date range");
+    if (!version || !selectedRepo || !dateRange.from || !dateRange.to) {
+      toast.error("Please fill in all fields");
       return;
     }
     setIsGenerating(true);
@@ -255,6 +259,7 @@ export default function NewChangelogForm() {
       setGeneratedContent(
         JSON.parse(response.data.changelog).summaryBulletPoints
       );
+      setTitle(JSON.parse(response.data.changelog).title);
     } catch (error) {
       console.error("Error generating changelog:", error);
       toast.error("Error generating changelog");
@@ -279,7 +284,7 @@ export default function NewChangelogForm() {
   const [isPublishing, setIsPublishing] = useState(false);
   const handlePublish = async () => {
     if (!selectedRepo || !version || !generatedContent) {
-      toast.error("Please fill in all fields");
+      toast.error("The changelog cannot be empty");
       return;
     }
     setIsPublishing(true);
@@ -291,6 +296,7 @@ export default function NewChangelogForm() {
           version,
           repo: selectedRepo,
           projectSlug: selectedRepo.toLowerCase().replace("/", "-"),
+          title,
         },
         {
           headers: {
@@ -406,7 +412,10 @@ export default function NewChangelogForm() {
           </div>
 
           <div className="flex items-end justify-end">
-            <Button onClick={() => setOpenCommitsModal(true)}>
+            <Button
+              onClick={() => setOpenCommitsModal(true)}
+              className="bg-sidebar text-primary hover:bg-sidebar/80"
+            >
               View Commits
             </Button>
             <CommitsDialog
@@ -427,7 +436,7 @@ export default function NewChangelogForm() {
               onClick={handleGenerateChangelog}
               disabled={isGenerating}
               size="sm"
-              className="bg-primary hover:bg-primary/90"
+              className="bg-sidebar text-primary hover:bg-sidebar/80"
             >
               {isGenerating ? (
                 <>
@@ -453,7 +462,6 @@ export default function NewChangelogForm() {
               <TabsTrigger value="preview">Preview</TabsTrigger>
             </TabsList>
 
-            {/* EDIT TAB */}
             <TabsContent value="edit">
               <Textarea
                 id="content"
@@ -478,7 +486,9 @@ export default function NewChangelogForm() {
                     {generatedContent ? (
                       <div
                         dangerouslySetInnerHTML={{
-                          __html: marked(generatedContent),
+                          __html: marked(
+                            generatedContent.replace(/\n\n/g, "<br><br>")
+                          ),
                         }}
                       />
                     ) : (
@@ -500,7 +510,7 @@ export default function NewChangelogForm() {
           Save as Draft
         </Button>
         <Button
-          className="bg-primary hover:bg-primary/90"
+          className="bg-sidebar text-primary hover:bg-sidebar/80"
           onClick={handlePublish}
         >
           {isPublishing ? (

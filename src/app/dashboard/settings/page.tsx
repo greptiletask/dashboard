@@ -159,7 +159,7 @@ export default function SettingsPage() {
                 </p>
               </div>
               <Button
-                className="w-fit cursor-pointer"
+                className="w-fit cursor-pointer bg-sidebar text-primary hover:bg-sidebar/80"
                 onClick={handleGithubAuth}
                 disabled={loading}
               >
@@ -188,13 +188,13 @@ export default function SettingsPage() {
               {isGithubConnected && (
                 <>
                   <Button
-                    className="w-fit cursor-pointer"
+                    className="w-fit cursor-pointer bg-sidebar text-primary hover:bg-sidebar/80"
                     onClick={handleUpdateGithubSettings}
                   >
                     Update GitHub Settings
                   </Button>
                   <Button
-                    className="w-fit cursor-pointer border-red-500 text-red-500 hover:border hover:border-red-500 hover:text-red-500"
+                    className="w-fit cursor-pointer border-red-500 text-red-500 hover:text-red-500 bg-sidebar hover:bg-sidebar/80"
                     onClick={handleDisconnectGithub}
                   >
                     Disconnect Github

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Globe, Check, AlertCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,13 +14,28 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-
+import { useParams } from "next/navigation";
 export default function CustomDomainPage() {
   const [domain, setDomain] = useState("");
   const [isVerifying, setIsVerifying] = useState(false);
   const [verificationStatus, setVerificationStatus] = useState<
     "idle" | "success" | "error"
   >("idle");
+
+  const params = useParams();
+  const projectSlug = params.projectSlug as string;
+
+  const handleFetchProject = async (projectSlug: string) => {
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/api/changelog/projects/${projectSlug}`
+    );
+    const data = await response.json();
+    console.log(data, "data from project!");
+  };
+
+  useEffect(() => {
+    handleFetchProject(projectSlug);
+  }, [projectSlug]);
 
   const handleAddDomain = async () => {
     setIsVerifying(true);

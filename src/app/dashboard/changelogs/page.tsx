@@ -26,15 +26,15 @@ import axios from "axios";
 // Adjust these interfaces/types according to your backend response
 interface ProjectType {
   id: string;
-  slug: string; // e.g. "my-project"
-  repoFullName: string; // e.g. "user/repo"
+  slug: string;
+  repoFullName: string;
 }
 
 interface ChangelogType {
   id: string;
   version: string;
-  createdAt: string; // or Date
-  // ... other fields
+  createdAt: string;
+  title: string;
 }
 
 export default function ChangelogsPage() {
@@ -160,7 +160,7 @@ export default function ChangelogsPage() {
 
           {/* New Changelog Button */}
           <Link href="/dashboard/new">
-            <Button>
+            <Button className="bg-sidebar text-primary hover:bg-sidebar/80">
               <Plus className="mr-2 h-4 w-4" />
               New Changelog
             </Button>
@@ -182,6 +182,7 @@ export default function ChangelogsPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Version</TableHead>
+                <TableHead>Title</TableHead>
                 <TableHead>Date</TableHead>
                 <TableHead className="text-right">Action</TableHead>
               </TableRow>
@@ -193,6 +194,7 @@ export default function ChangelogsPage() {
                     <TableCell className="font-medium">
                       {changelog.version}
                     </TableCell>
+                    <TableCell>{changelog.title}</TableCell>
                     <TableCell>
                       {new Date(changelog.createdAt).toLocaleDateString(
                         "en-US",
