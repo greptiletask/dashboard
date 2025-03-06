@@ -275,7 +275,14 @@ export default function NewChangelogForm() {
   // -----------------------------
   // F. PUBLISH
   // -----------------------------
+
+  const [isPublishing, setIsPublishing] = useState(false);
   const handlePublish = async () => {
+    if (!selectedRepo || !version || !generatedContent) {
+      toast.error("Please fill in all fields");
+      return;
+    }
+    setIsPublishing(true);
     try {
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_API_URL}/api/changelog`,
@@ -293,9 +300,17 @@ export default function NewChangelogForm() {
       );
       console.log(response.data, "response from publish");
       toast.success("Changelog published successfully!");
+      // Clear form fields
+      setSelectedRepo("");
+      setVersion("");
+      setGeneratedContent("");
+      setDateRange({ from: undefined, to: undefined });
       router.push("/dashboard/changelogs");
     } catch (error) {
       console.error("Error publishing changelog:", error);
+      toast.error("Error publishing changelog");
+    } finally {
+      setIsPublishing(false);
     }
   };
 
@@ -488,7 +503,14 @@ export default function NewChangelogForm() {
           className="bg-primary hover:bg-primary/90"
           onClick={handlePublish}
         >
-          Publish Changelog
+          {isPublishing ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Publishing...
+            </>
+          ) : (
+            "Publish Changelog"
+          )}
         </Button>
       </CardFooter>
     </Card>
