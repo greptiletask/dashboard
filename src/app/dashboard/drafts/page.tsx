@@ -14,7 +14,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { ArrowRight, Plus, Trash2 } from "lucide-react";
-import { Changelog } from "@/app/dashboard/new/page";
+import { Changelog } from "@/app/dashboard/new/NewClient";
 
 import { ChangelogModal } from "@/components/changelog-modal";
 
