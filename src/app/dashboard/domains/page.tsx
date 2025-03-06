@@ -1,6 +1,10 @@
 "use client";
 
+import { useState, useEffect, useMemo } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
+import axios from "axios";
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,46 +17,79 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Plus, ExternalLink, Github } from "lucide-react";
-import Link from "next/link";
 
-// Mock data for projects and their domains
-const projects = [
-  {
-    id: "project-1",
-    name: "Marketing Website",
-    customDomain: "marketing.example.com",
-  },
-  {
-    id: "project-2",
-    name: "Customer Portal",
-    customDomain: "customers.example.com",
-  },
-  {
-    id: "project-3",
-    name: "Admin Dashboard",
-    customDomain: null,
-  },
-  {
-    id: "project-4",
-    name: "API Documentation",
-    customDomain: "api-docs.example.com",
-  },
-  {
-    id: "project-5",
-    name: "Analytics Platform",
-    customDomain: null,
-  },
-];
+/**
+ * Example shape from your backend:
+ * {
+ *   "_id": { "$oid": "67c8ed805d4b6e43b5668d27" },
+ *   "userId": "user_2tt3W9HDx36wQzPSwzNnfF9vHKQ",
+ *   "repoFullName": "10DollarJob/marketplace",
+ *   "customDomain": "",
+ *   "isDomainVerified": false,
+ *   "slug": "10dollarjob-marketplace",
+ *   ...
+ * }
+ */
+interface ProjectItem {
+  userId: string;
+  repoFullName: string;
+  customDomain: string;
+  isDomainVerified: boolean;
+  slug: string;
+  [key: string]: any; // for additional fields
+}
 
 export default function DomainsPage() {
   const router = useRouter();
+  const [projects, setProjects] = useState<ProjectItem[]>([]);
 
+  // -----------------------------------------
+  // 1) useMemo for fetch function
+  // -----------------------------------------
+  const fetchProjects = useMemo(
+    () => async () => {
+      try {
+        // Adjust to match your actual endpoint
+        const response = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/changelog/projects`,
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem(
+                "clerk-authToken"
+              )}`,
+            },
+          }
+        );
+        // Suppose the response looks like { projects: ProjectItem[] }
+        setProjects(response.data.projects || []);
+      } catch (error) {
+        console.error("Error fetching projects:", error);
+      }
+    },
+    []
+  );
+
+  // -----------------------------------------
+  // 2) Call the memoized fetch on mount
+  // -----------------------------------------
+  useEffect(() => {
+    fetchProjects();
+  }, [fetchProjects]);
+
+  // -----------------------------------------
+  // 3) Row click => navigate
+  // -----------------------------------------
   const handleRowClick = (projectId: string) => {
+    // Navigate to /dashboard/domains/[projectId]
     router.push(`/dashboard/domains/${projectId}`);
   };
 
+  // -----------------------------------------
+  // RENDER
+  // -----------------------------------------
   return (
     <div className="container mx-auto py-10 space-y-10">
+      {/* Page Header */}
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">Project Domains</h1>
         <Link href="/dashboard/domains/new">
@@ -63,6 +100,7 @@ export default function DomainsPage() {
         </Link>
       </div>
 
+      {/* Projects Table */}
       <Card>
         <CardHeader>
           <CardTitle>All Projects</CardTitle>
@@ -78,42 +116,52 @@ export default function DomainsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {projects.map((project) => (
-                <TableRow
-                  key={project.id}
-                  onClick={() => handleRowClick(project.id)}
-                  className="cursor-pointer hover:bg-muted"
-                >
-                  <TableCell className="font-medium">
-                    {project.id.substring(0, 4)}...
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center">
-                      <Github className="mr-2 h-4 w-4" />
-                      {project.name}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    {project.customDomain ? (
+              {projects.map((project) => {
+                // If customDomain is empty, show fallback domain
+                const domainToShow = project.customDomain
+                  ? project.customDomain
+                  : `greptile-changelogs.com/${project.slug}`;
+
+                // Determine status
+                const isCustom =
+                  project.customDomain && project.customDomain !== "";
+                const domainStatus = isCustom ? "Active" : "Default";
+
+                return (
+                  <TableRow
+                    key={project.slug}
+                    onClick={() => handleRowClick(project.slug)}
+                    className="cursor-pointer hover:bg-muted"
+                  >
+                    <TableCell className="font-medium">{project.slug}</TableCell>
+                    <TableCell>
                       <div className="flex items-center">
-                        {project.customDomain}
-                        <ExternalLink className="ml-2 h-4 w-4 text-muted-foreground" />
+                        <Github className="mr-2 h-4 w-4" />
+                        {project.repoFullName}
                       </div>
-                    ) : (
-                      <span className="text-muted-foreground">
-                        greptile-changelogs.com/{project.id}
-                      </span>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {project.customDomain ? (
-                      <Badge variant="default">Active</Badge>
-                    ) : (
-                      <Badge variant="outline">Default</Badge>
-                    )}
-                  </TableCell>
-                </TableRow>
-              ))}
+                    </TableCell>
+                    <TableCell>
+                      {isCustom ? (
+                        <div className="flex items-center">
+                          {domainToShow}
+                          <ExternalLink className="ml-2 h-4 w-4 text-muted-foreground" />
+                        </div>
+                      ) : (
+                        <span className="text-muted-foreground">
+                          {domainToShow}
+                        </span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {isCustom ? (
+                        <Badge variant="default">{domainStatus}</Badge>
+                      ) : (
+                        <Badge variant="outline">{domainStatus}</Badge>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         </CardContent>

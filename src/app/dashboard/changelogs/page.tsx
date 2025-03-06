@@ -22,90 +22,110 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import axios from "axios";
-// Mock data for projects
-const projects = [
-  { id: "all", name: "All Projects" },
-  { id: "project1", name: "Dashboard App" },
-  { id: "project2", name: "Marketing Website" },
-  { id: "project3", name: "Mobile Application" },
-  { id: "project4", name: "E-commerce Platform" },
-];
 
-// Mock data for changelogs
-const changelogs = [
-  {
-    id: "1",
-    version: "v2.0.0",
-    date: "2025-03-01",
-    title: "Major Release: Enhanced AI Generation",
-    type: "major",
-    projectId: "project1",
-  },
-  {
-    id: "2",
-    version: "v1.5.0",
-    date: "2025-02-15",
-    title: "GitHub Integration and Performance Improvements",
-    type: "minor",
-    projectId: "project2",
-  },
-  {
-    id: "3",
-    version: "v1.4.2",
-    date: "2025-02-01",
-    title: "Bug Fixes and UI Enhancements",
-    type: "patch",
-    projectId: "project1",
-  },
-  {
-    id: "4",
-    version: "v1.4.1",
-    date: "2025-01-15",
-    title: "Security Updates",
-    type: "patch",
-    projectId: "project3",
-  },
-  {
-    id: "5",
-    version: "v1.4.0",
-    date: "2025-01-01",
-    title: "New Year, New Features",
-    type: "minor",
-    projectId: "project2",
-  },
-];
+// Adjust these interfaces/types according to your backend response
+interface ProjectType {
+  id: string;
+  slug: string; // e.g. "my-project"
+  repoFullName: string; // e.g. "user/repo"
+}
+
+interface ChangelogType {
+  id: string;
+  version: string;
+  createdAt: string; // or Date
+  // ... other fields
+}
 
 export default function ChangelogsPage() {
-  const [selectedChangelog, setSelectedChangelog] = useState(null);
-  const [selectedProject, setSelectedProject] = useState("all");
-  const [projects, setProjects] = useState([]);
-  const [changelogs, setChangelogs] = useState([]);
+  const [projects, setProjects] = useState<ProjectType[]>([]);
+  const [changelogs, setChangelogs] = useState<ChangelogType[]>([]);
 
-  const loadProjects = async () => {
-    const response = await axios.get(
-      `${process.env.NEXT_PUBLIC_API_URL}/api/changelog/projects`
-    );
+  // The currently selected project slug
+  const [selectedProject, setSelectedProject] = useState<string>("all");
 
-    setProjects(response.data);
-    setSelectedProject(response.data[0].slug);
-  };
+  // For the modal
+  const [selectedChangelog, setSelectedChangelog] =
+    useState<ChangelogType | null>(null);
 
-  const loadChangelogs = async () => {
-    const response = await axios.get(
-      `${process.env.NEXT_PUBLIC_API_URL}/api/changelog/projects/${selectedProject}`
-    );
-    setChangelogs(response.data);
-  };
-
+  // -----------------------------
+  // 1) Load Projects on Mount
+  // -----------------------------
   useEffect(() => {
     loadProjects();
   }, []);
 
-  useEffect(() => {
-    loadChangelogs();
-  }, [selectedProject]);
+  const loadProjects = async () => {
+    try {
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/changelog/projects`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("clerk-authToken")}`,
+          },
+        }
+      );
 
-  const handleOpenModal = (changelog: any) => {
+      // Suppose your API returns { projects: ProjectType[] }
+      const fetchedProjects: ProjectType[] = response.data.projects || [];
+
+      // Optionally prepend an "All Projects" item if you want to handle that
+      const allItem: ProjectType = {
+        id: "all",
+        slug: "all",
+        repoFullName: "All Projects",
+      };
+
+      const finalProjects = [...fetchedProjects];
+      setProjects(finalProjects);
+
+      // Default selection: "all" or the first real project
+      setSelectedProject(finalProjects[0].slug);
+      // Load all changelogs initially (or pick first project)
+      loadChangelogs(finalProjects[0].slug);
+    } catch (error) {
+      console.error("Error loading projects:", error);
+    }
+  };
+
+  // -----------------------------
+  // 2) Load Changelogs
+  // -----------------------------
+  const loadChangelogs = async (projectSlug: string) => {
+    try {
+      // If user chooses "all", you might have a dedicated endpoint for all
+      // or pass "all" to the route. Adjust as needed:
+      let url = `${process.env.NEXT_PUBLIC_API_URL}/api/changelog/changelogs`;
+      if (projectSlug !== "all") {
+        url += `/${projectSlug}`;
+      }
+
+      const response = await axios.get(url, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("clerk-authToken")}`,
+        },
+      });
+
+      // Suppose your API returns { changelogs: ChangelogType[] }
+      setChangelogs(response.data.changelogs || []);
+    } catch (error) {
+      console.error("Error loading changelogs:", error);
+      setChangelogs([]);
+    }
+  };
+
+  // -----------------------------
+  // 3) Handle Project Change (Select)
+  // -----------------------------
+  const handleProjectChange = (value: string) => {
+    setSelectedProject(value);
+    loadChangelogs(value);
+  };
+
+  // -----------------------------
+  // 4) Modal Helpers
+  // -----------------------------
+  const handleOpenModal = (changelog: ChangelogType) => {
     setSelectedChangelog(changelog);
   };
 
@@ -113,29 +133,32 @@ export default function ChangelogsPage() {
     setSelectedChangelog(null);
   };
 
-  const handleProjectChange = (value: string) => {
-    setSelectedProject(value);
-  };
-
+  // -----------------------------
+  // RENDER
+  // -----------------------------
   return (
     <div className="container mx-auto py-10 space-y-10">
+      {/* Page Header */}
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">Changelogs</h1>
         <div className="flex items-center gap-4">
-          <div className="w-[220px]">
+          {/* Project Selector */}
+          <div className="w-fit">
             <Select value={selectedProject} onValueChange={handleProjectChange}>
-              <SelectTrigger className="w-[220px]">
+              <SelectTrigger className="w-fit px-4">
                 <SelectValue placeholder="Select project" />
               </SelectTrigger>
-              <SelectContent className="w-[220px]">
-                {projects.map((project: any) => (
-                  <SelectItem key={project.id} value={project.id}>
+              <SelectContent className="w-fit">
+                {projects.map((project: ProjectType) => (
+                  <SelectItem key={project.slug} value={project.slug}>
                     {project.repoFullName}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
+
+          {/* New Changelog Button */}
           <Link href="/dashboard/new">
             <Button>
               <Plus className="mr-2 h-4 w-4" />
@@ -145,6 +168,7 @@ export default function ChangelogsPage() {
         </div>
       </div>
 
+      {/* Changelogs Table */}
       <Card>
         <CardHeader>
           <CardTitle>
@@ -158,20 +182,23 @@ export default function ChangelogsPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Version</TableHead>
-                <TableHead>Title</TableHead>
                 <TableHead>Date</TableHead>
                 <TableHead className="text-right">Action</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {changelogs.length > 0 ? (
-                changelogs.map((changelog: any) => (
+                changelogs.map((changelog: ChangelogType) => (
                   <TableRow key={changelog.id}>
                     <TableCell className="font-medium">
                       {changelog.version}
                     </TableCell>
-                    <TableCell>{changelog.title}</TableCell>
-                    <TableCell>{changelog.date}</TableCell>
+                    <TableCell>
+                      {new Date(changelog.createdAt).toLocaleDateString(
+                        "en-US",
+                        { year: "numeric", month: "short", day: "numeric" }
+                      )}
+                    </TableCell>
                     <TableCell className="text-right">
                       <Button
                         variant="ghost"
@@ -186,7 +213,7 @@ export default function ChangelogsPage() {
               ) : (
                 <TableRow>
                   <TableCell
-                    colSpan={4}
+                    colSpan={3}
                     className="text-center py-6 text-muted-foreground"
                   >
                     No changelogs found for this project
@@ -198,6 +225,7 @@ export default function ChangelogsPage() {
         </CardContent>
       </Card>
 
+      {/* Modal */}
       <ChangelogModal
         changelog={selectedChangelog}
         isOpen={!!selectedChangelog}

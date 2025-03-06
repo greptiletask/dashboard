@@ -10,18 +10,10 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-
-interface Changelog {
-  id: string;
-  version: string;
-  date: string;
-  title: string;
-  type: "major" | "minor" | "patch";
-  content?: string;
-}
+import { marked } from "marked";
 
 interface ChangelogModalProps {
-  changelog: Changelog | null;
+  changelog: any | null;
   isOpen: boolean;
   onClose: () => void;
 }
@@ -36,26 +28,7 @@ export function ChangelogModal({
   useEffect(() => {
     if (changelog) {
       // Simulate fetching detailed content
-      setContent(`
-        <h2>New Features</h2>
-        <ul>
-          <li>Implemented user authentication system</li>
-          <li>Added dark mode support</li>
-          <li>Introduced new dashboard widgets</li>
-        </ul>
-        <h2>Improvements</h2>
-        <ul>
-          <li>Enhanced performance of data loading</li>
-          <li>Updated UI components for better accessibility</li>
-          <li>Refactored codebase for improved maintainability</li>
-        </ul>
-        <h2>Bug Fixes</h2>
-        <ul>
-          <li>Fixed issue with form submission on Safari</li>
-          <li>Resolved data synchronization problems</li>
-          <li>Corrected styling inconsistencies in mobile view</li>
-        </ul>
-      `);
+      setContent(changelog.changelog || "");
     }
   }, [changelog]);
 
@@ -66,7 +39,7 @@ export function ChangelogModal({
       <DialogContent className="sm:max-w-[625px]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            {changelog.title}
+            {changelog.version}
             <Badge
               variant={
                 changelog.type === "major"
@@ -82,11 +55,16 @@ export function ChangelogModal({
         </DialogHeader>
         <div className="py-4">
           <p className="text-sm text-muted-foreground mb-4">
-            Released on {changelog.date}
+            Released on{" "}
+            {new Date(changelog.createdAt).toLocaleDateString("en-US", {
+              year: "numeric",
+              month: "short",
+              day: "numeric",
+            })}
           </p>
           <div
             className="prose prose-sm dark:prose-invert max-w-none"
-            dangerouslySetInnerHTML={{ __html: content }}
+            dangerouslySetInnerHTML={{ __html: marked(content) }}
           />
         </div>
         <DialogFooter>

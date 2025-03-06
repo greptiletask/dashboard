@@ -24,7 +24,6 @@ export default function CustomDomainPage() {
 
   const handleAddDomain = async () => {
     setIsVerifying(true);
-    // Simulating API call for domain verification
     setTimeout(() => {
       setIsVerifying(false);
       setVerificationStatus(Math.random() > 0.5 ? "success" : "error");

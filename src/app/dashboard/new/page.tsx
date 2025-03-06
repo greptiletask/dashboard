@@ -283,12 +283,7 @@ export default function NewChangelogForm() {
           changelog: generatedContent,
           version,
           repo: selectedRepo,
-          projectSlug: slugify(selectedRepo, {
-            lower: true,
-            strict: true,
-            replacement: "-",
-            remove: /\/+/g,
-          }),
+          projectSlug: selectedRepo.toLowerCase().replace("/", "-"),
         },
         {
           headers: {
@@ -296,6 +291,9 @@ export default function NewChangelogForm() {
           },
         }
       );
+      console.log(response.data, "response from publish");
+      toast.success("Changelog published successfully!");
+      router.push("/dashboard/changelogs");
     } catch (error) {
       console.error("Error publishing changelog:", error);
     }
