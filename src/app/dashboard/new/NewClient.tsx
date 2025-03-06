@@ -469,7 +469,7 @@ export default function NewChangelogForm() {
               onClick={handleGenerateChangelog}
               disabled={isGenerating}
               size="sm"
-              className="bg-sidebar text-primary hover:bg-sidebar/80"
+              className="bg-button text-primary hover:bg-button/80"
             >
               {isGenerating ? (
                 <>
