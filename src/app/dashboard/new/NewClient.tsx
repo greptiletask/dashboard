@@ -87,6 +87,8 @@ export default function NewChangelogForm() {
 
   const [isGithubConnected, setIsGithubConnected] = useState(false);
 
+  const [responseStyle, setResponseStyle] = useState("non-technical");
+
   // -----------------------------
   // 1) Load Existing Draft if present
   // -----------------------------
@@ -282,7 +284,7 @@ export default function NewChangelogForm() {
 
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_API_URL}/api/github/generate-changelog`,
-        { owner, repo, start, end },
+        { owner, repo, start, end, response_style: responseStyle },
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("clerk-authToken")}`,
@@ -519,24 +521,46 @@ export default function NewChangelogForm() {
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <Label htmlFor="content">Changelog Content</Label>
-            <Button
-              onClick={handleGenerateChangelog}
-              disabled={isGenerating}
-              size="sm"
-              className="bg-sidebar text-primary hover:bg-sidebar/80"
-            >
-              {isGenerating ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Generating...
-                </>
-              ) : (
-                <>
-                  <Sparkles className="mr-2 h-4 w-4" />
-                  Generate with AI
-                </>
-              )}
-            </Button>
+            <div className="flex items-center gap-2">
+              <Select
+                value={responseStyle}
+                onValueChange={(value) => setResponseStyle(value)}
+              >
+                <SelectTrigger className="px-3 min-w-[400px] text-xs">
+                  <SelectValue
+                    placeholder="Select format"
+                    defaultValue="technical"
+                  />
+                </SelectTrigger>
+                <SelectContent className="min-w-[400px] text-xs">
+                  <SelectItem value="non-technical">
+                    Feature-Focused (Customer-Friendly)
+                  </SelectItem>
+                  <SelectItem value="technical">
+                    Technical (Developer-Oriented)
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Button
+                onClick={handleGenerateChangelog}
+                disabled={isGenerating}
+                size="sm"
+                className="bg-sidebar text-primary hover:bg-sidebar/80"
+              >
+                {isGenerating ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Generating...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="mr-2 h-4 w-4" />
+                    Generate with AI
+                  </>
+                )}
+              </Button>
+            </div>
           </div>
 
           <Tabs

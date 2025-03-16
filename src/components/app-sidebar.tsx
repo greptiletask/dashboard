@@ -83,7 +83,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               onClick={toggleSidebar}
             >
               <div className="flex items-center">
-                <div className="flex aspect-square size-8 bg-[#4ca475] items-center justify-center rounded-lg text-sidebar-primary-foreground">
+                <div className="flex aspect-square size-8 bg-[#3B82F6] items-center justify-center rounded-lg text-sidebar-primary-foreground">
                   {state === "expanded" ? "A" : "A"}
                 </div>
                 {state === "expanded" && (
