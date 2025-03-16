@@ -147,10 +147,9 @@ export default function NewChangelogForm() {
           updatedAt: new Date().toISOString(),
         };
       } else {
-        // Not found => create new
         const newDraft: Changelog = {
           draftId,
-          userId: "user-123",
+          userId: "",
           changelog: generatedContent,
           version: version || "v0.0.0",
           title,

@@ -9,7 +9,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-
 import { Switch } from "@/components/ui/switch";
 import { Github, Globe, LogOut, Moon, Sun } from "lucide-react";
 import { useUser } from "@clerk/nextjs";
@@ -20,8 +19,10 @@ import { useEffect } from "react";
 import axios from "axios";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Loader2 } from "lucide-react";
+import { useTheme } from "next-themes";
 
 export default function SettingsPage() {
+  const { setTheme } = useTheme();
   const [isDarkMode, setIsDarkMode] = useState(true);
 
   const { user } = useUser();
@@ -236,7 +237,7 @@ export default function SettingsPage() {
                   )}
                 </div>
                 <div>
-                  <p className="text-sm font-medium">Dark Mode</p>
+                  <p className="text-sm font-medium">Theme</p>
                   <p className="text-sm text-muted-foreground">
                     {isDarkMode
                       ? "Currently using dark mode"
@@ -244,7 +245,13 @@ export default function SettingsPage() {
                   </p>
                 </div>
               </div>
-              <Switch checked={isDarkMode} onCheckedChange={setIsDarkMode} />
+              <Switch
+                checked={isDarkMode}
+                onCheckedChange={(checked) => {
+                  setIsDarkMode(checked);
+                  setTheme(checked ? "dark" : "light");
+                }}
+              />
             </div>
           </CardContent>
         </Card>
