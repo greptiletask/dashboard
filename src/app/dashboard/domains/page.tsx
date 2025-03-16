@@ -69,7 +69,7 @@ export default function DomainsPage() {
   };
 
   return (
-    <div className="container mx-auto py-0 space-y-10">
+    <div className="py-0 space-y-10">
       {/* Page Header */}
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">Project Domains</h1>

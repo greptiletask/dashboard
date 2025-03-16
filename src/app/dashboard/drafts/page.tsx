@@ -53,7 +53,7 @@ export default function ChangelogsPage() {
   };
 
   return (
-    <div className="container mx-auto py-0 space-y-10">
+    <div className="py-0 space-y-10">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">Drafts</h1>
         <Link href="/dashboard/new">

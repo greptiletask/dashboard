@@ -138,7 +138,7 @@ export default function SettingsPage() {
   }, [githubData]);
 
   return (
-    <div className="container mx-auto py-10 space-y-10">
+    <div className="py-0 space-y-10">
       <h1 className="text-3xl font-bold">Settings</h1>
       <div className="space-y-6">
         {/* Account Settings */}
