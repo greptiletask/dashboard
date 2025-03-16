@@ -11,6 +11,8 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { marked } from "marked";
+import { ExternalLink } from "lucide-react";
+import Link from "next/link";
 
 interface ChangelogModalProps {
   changelog: any | null;
@@ -51,6 +53,13 @@ export function ChangelogModal({
             >
               {changelog.version}
             </Badge>
+            <Link
+              href={`https://autocl.live/${changelog.projectSlug}`}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <ExternalLink className="w-4 h-4" />
+            </Link>
           </DialogTitle>
         </DialogHeader>
         <div className="py-4">

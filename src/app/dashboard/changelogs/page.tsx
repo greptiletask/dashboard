@@ -35,6 +35,7 @@ interface ChangelogType {
   version: string;
   createdAt: string;
   title: string;
+  projectSlug: string;
 }
 
 export default function ChangelogsPage() {
@@ -183,6 +184,7 @@ export default function ChangelogsPage() {
               <TableRow>
                 <TableHead>Version</TableHead>
                 <TableHead>Title</TableHead>
+                <TableHead>View at</TableHead>
                 <TableHead>Date</TableHead>
                 <TableHead className="text-right">Action</TableHead>
               </TableRow>
@@ -195,6 +197,15 @@ export default function ChangelogsPage() {
                       {changelog.version}
                     </TableCell>
                     <TableCell>{changelog.title}</TableCell>
+                    <TableCell>
+                      <a
+                        href={`https://autocl.live/${changelog.projectSlug}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        autocl.live/{changelog.projectSlug}
+                      </a>
+                    </TableCell>
                     <TableCell>
                       {new Date(changelog.createdAt).toLocaleDateString(
                         "en-US",
