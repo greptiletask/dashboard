@@ -333,7 +333,10 @@ export default function NewChangelogForm() {
       setDraftId(null);
 
       // Redirect to main changelogs page
-      router.push("/dashboard/changelogs");
+      window.open(
+        `https://autocl.live/${selectedRepo.toLowerCase().replace("/", "-")}`,
+        "_blank"
+      );
     } catch (error) {
       console.error("Error publishing changelog:", error);
       toast.error("Error publishing changelog");
@@ -377,6 +380,18 @@ export default function NewChangelogForm() {
                 )}
               </SelectContent>
             </Select>
+            <Label className="text-xs text-muted-foreground">
+              The changelogs for this repo will be published to{" "}
+              <a
+                href={`https://autocl.live/${selectedRepo
+                  .toLowerCase()
+                  .replace("/", "-")}`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                autocl.live/{selectedRepo.toLowerCase().replace("/", "-")}
+              </a>
+            </Label>
           </div>
 
           {/* Version */}
