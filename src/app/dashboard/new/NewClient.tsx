@@ -85,6 +85,8 @@ export default function NewChangelogForm() {
   // For identifying the draft
   const [draftId, setDraftId] = useState<string | null>(urlDraftId);
 
+  const [isGithubConnected, setIsGithubConnected] = useState(false);
+
   // -----------------------------
   // 1) Load Existing Draft if present
   // -----------------------------
@@ -182,7 +184,29 @@ export default function NewChangelogForm() {
   // -----------------------------
   useEffect(() => {
     handleFetchRepos();
+    handleFetchUser();
   }, []);
+
+  const handleFetchUser = async () => {
+    try {
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/user`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("clerk-authToken")}`,
+          },
+        }
+      );
+      console.log(response.data, "response from user");
+      if (response.data.accessToken) {
+        setIsGithubConnected(true);
+      } else {
+        setIsGithubConnected(false);
+      }
+    } catch (error) {
+      console.error("Error fetching user:", error);
+    }
+  };
 
   const handleFetchRepos = async () => {
     try {
@@ -356,42 +380,57 @@ export default function NewChangelogForm() {
           {/* Repository */}
           <div className="space-y-2">
             <Label htmlFor="repository">Repository</Label>
-            <Select
-              value={selectedRepo}
-              onValueChange={(value) => setSelectedRepo(value)}
-            >
-              <SelectTrigger className="w-[100%]">
-                <SelectValue placeholder="Select repository" />
-              </SelectTrigger>
-              <SelectContent>
-                {repositories && repositories.length > 0 ? (
-                  repositories.map((repo) => (
-                    <SelectItem key={repo.fullName} value={repo.fullName}>
-                      <div className="flex items-center">
-                        <GitBranch className="mr-2 h-4 w-4" />
-                        {repo.fullName}
-                      </div>
-                    </SelectItem>
-                  ))
-                ) : (
-                  <SelectItem value="no-repos">
-                    No repositories found
-                  </SelectItem>
-                )}
-              </SelectContent>
-            </Select>
-            <Label className="text-xs text-muted-foreground">
-              The changelogs for this repo will be published to{" "}
-              <a
-                href={`https://autocl.live/${selectedRepo
-                  .toLowerCase()
-                  .replace("/", "-")}`}
-                target="_blank"
-                rel="noopener noreferrer"
+            {isGithubConnected ? (
+              <>
+                <Select
+                  value={selectedRepo}
+                  onValueChange={(value) => setSelectedRepo(value)}
+                >
+                  <SelectTrigger className="w-[100%]">
+                    <SelectValue placeholder="Select repository" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {repositories && repositories.length > 0 ? (
+                      repositories.map((repo) => (
+                        <SelectItem key={repo.fullName} value={repo.fullName}>
+                          <div className="flex items-center">
+                            <GitBranch className="mr-2 h-4 w-4" />
+                            {repo.fullName}
+                          </div>
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <SelectItem value="no-repos">
+                        No repositories found
+                      </SelectItem>
+                    )}
+                  </SelectContent>
+                </Select>
+                <Label className="text-xs text-muted-foreground">
+                  The changelogs for this repo will be published to{" "}
+                  <a
+                    href={`https://autocl.live/${selectedRepo
+                      .toLowerCase()
+                      .replace("/", "-")}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    autocl.live/{selectedRepo.toLowerCase().replace("/", "-")}
+                  </a>
+                </Label>
+              </>
+            ) : (
+              <Button
+                variant="outline"
+                className="w-[100%]"
+                onClick={() => {
+                  window.location.href = "/dashboard/settings";
+                }}
               >
-                autocl.live/{selectedRepo.toLowerCase().replace("/", "-")}
-              </a>
-            </Label>
+                <GitBranch className="mr-2 h-4 w-4" />
+                Connect Github
+              </Button>
+            )}
           </div>
 
           {/* Version */}

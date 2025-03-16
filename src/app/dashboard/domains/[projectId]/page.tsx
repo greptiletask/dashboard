@@ -198,7 +198,7 @@ export default function CustomDomainPage() {
 
             {/* Alert messages */}
             {verificationStatus === "success" && (
-              <Alert className="bg-green-50 text-green-800 border-green-200">
+              <Alert className="bg-green-200/10 text-green-800 border-black-200 border-[0.5px]">
                 <Check className="h-4 w-4" />
                 <AlertTitle>Success</AlertTitle>
                 <AlertDescription>
