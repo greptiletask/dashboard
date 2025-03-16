@@ -56,6 +56,8 @@ const data = {
           title: "Domains",
           url: "/dashboard/domains",
           icon: Globe,
+          disabled: true,
+          tooltip: "Coming soon",
         },
         {
           title: "Settings",
@@ -94,6 +96,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
+
       <SidebarContent>
         {data.navMain.map((item) => (
           <SidebarGroup key={item.title}>
@@ -105,15 +108,51 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               <SidebarMenu>
                 {item.items.map((subItem) => {
                   const isActive = pathname === subItem.url;
+
                   return (
                     <SidebarMenuItem key={subItem.title}>
-                      <SidebarMenuButton asChild isActive={isActive}>
-                        <Link href={subItem.url}>
-                          {subItem.icon && (
-                            <subItem.icon className="mr-2 h-4 w-4" />
-                          )}
-                          {state === "expanded" && subItem.title}
-                        </Link>
+                      <SidebarMenuButton
+                        // We pass `disabled` here so the item is visibly inactive,
+                        // and has no pointer events.
+                        disabled={subItem.disabled}
+                        isActive={isActive}
+                        asChild
+                        className={
+                          subItem.disabled
+                            ? "cursor-not-allowed opacity-50"
+                            : ""
+                        }
+                      >
+                        {/* If item is disabled, don't render a Link.
+                            Instead, render a div with the same styling. */}
+                        {subItem.disabled ? (
+                          <div className="flex items-center">
+                            {subItem.icon && (
+                              <subItem.icon className="mr-2 h-4 w-4" />
+                            )}
+                            {state === "expanded" && (
+                              <div className="flex items-center gap-2">
+                                {subItem.title}
+                                {/* Show a 'badge' if tooltip is provided */}
+                                {subItem.tooltip && (
+                                  <span
+                                    className="inline-block rounded-full bg-muted 
+                                               px-2 py-0.5 text-xs font-medium text-muted-foreground"
+                                  >
+                                    {subItem.tooltip}
+                                  </span>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <Link href={subItem.url}>
+                            {subItem.icon && (
+                              <subItem.icon className="mr-2 h-4 w-4" />
+                            )}
+                            {state === "expanded" && subItem.title}
+                          </Link>
+                        )}
                       </SidebarMenuButton>
                     </SidebarMenuItem>
                   );
@@ -123,6 +162,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           </SidebarGroup>
         ))}
       </SidebarContent>
+
       <SidebarFooter className="flex items-center gap-2 p-3 border-t flex-row">
         <UserButton />
         {state === "expanded" && user && (

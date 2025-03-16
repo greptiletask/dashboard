@@ -73,12 +73,6 @@ export default function DomainsPage() {
       {/* Page Header */}
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">Project Domains</h1>
-        {/* <Link href="/dashboard/domains/new">
-          <Button>
-            <Plus className="mr-2 h-4 w-4" />
-            Add Domain
-          </Button>
-        </Link> */}
       </div>
 
       <Card>
