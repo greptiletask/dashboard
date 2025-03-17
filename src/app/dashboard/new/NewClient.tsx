@@ -377,7 +377,7 @@ export default function NewChangelogForm() {
     <Card className="w-full">
       <CardContent className="space-y-6">
         {/* Row for Repository + Version */}
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-3 gap-4">
           {/* Repository */}
           <div className="space-y-2">
             <Label htmlFor="repository">Repository</Label>
@@ -434,7 +434,15 @@ export default function NewChangelogForm() {
             )}
           </div>
 
-          {/* Version */}
+          <div className="space-y-2">
+            <Label htmlFor="version">Branch</Label>
+            <Input
+              id="version"
+              placeholder="e.g. main"
+              value={version}
+              onChange={(e) => setVersion(e.target.value)}
+            />
+          </div>
           <div className="space-y-2">
             <Label htmlFor="version">Version</Label>
             <Input

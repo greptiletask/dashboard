@@ -38,7 +38,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Separator } from "@/components/ui/separator";
 import axios from "axios";
 
 // Adjust these interfaces/types according to your backend response
@@ -440,8 +439,6 @@ export default function ChangelogsPage() {
           )}
         </CardContent>
       </Card>
-      {/* Visual Separator */}
-      <Separator className="my-8 bg-slate-200 dark:bg-slate-700" />
 
       {/* Modal */}
       <ChangelogModal
