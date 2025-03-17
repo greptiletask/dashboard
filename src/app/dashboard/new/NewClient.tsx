@@ -272,7 +272,7 @@ export default function NewChangelogForm() {
         const response = await axios.get(
           `${process.env.NEXT_PUBLIC_API_URL}/api/github/commits`,
           {
-            params: { owner, repo, start, end },
+            params: { owner, repo, start, end, branch: selectedBranch },
             headers: {
               Authorization: `Bearer ${localStorage.getItem(
                 "clerk-authToken"
@@ -314,7 +314,14 @@ export default function NewChangelogForm() {
 
       const response = await axios.post(
         `${process.env.NEXT_PUBLIC_API_URL}/api/github/generate-changelog`,
-        { owner, repo, start, end, response_style: responseStyle },
+        {
+          owner,
+          repo,
+          start,
+          end,
+          response_style: responseStyle,
+          branch: selectedBranch,
+        },
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("clerk-authToken")}`,
