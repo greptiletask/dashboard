@@ -9,6 +9,7 @@ import {
   Save,
   Globe,
   Sparkles,
+  Zap,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -29,7 +30,6 @@ import {
 } from "@/components/ui/sidebar";
 import { useSidebar } from "@/components/ui/sidebar";
 
-// Updated sample data with icons and correct URLs
 const data = {
   navMain: [
     {
@@ -46,6 +46,11 @@ const data = {
           title: "Changelogs",
           url: "/dashboard/changelogs",
           icon: FileText,
+        },
+        {
+          title: "Automations",
+          url: "/dashboard/automations",
+          icon: Zap,
         },
         {
           title: "Drafts",
@@ -112,8 +117,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   return (
                     <SidebarMenuItem key={subItem.title}>
                       <SidebarMenuButton
-                        // We pass `disabled` here so the item is visibly inactive,
-                        // and has no pointer events.
                         disabled={subItem.disabled}
                         isActive={isActive}
                         asChild
