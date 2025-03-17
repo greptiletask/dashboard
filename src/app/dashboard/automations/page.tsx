@@ -59,7 +59,7 @@ export default function ChangelogsPage() {
   const [schedules, setSchedules] = useState<ScheduleType[]>(mockSchedules);
 
   // The currently selected project slug
-  const [selectedProject, setSelectedProject] = useState<string>("all");
+  const [selectedProject, setSelectedProject] = useState<string>("");
 
   // For the modal
   const [selectedChangelog, setSelectedChangelog] =
@@ -274,25 +274,21 @@ export default function ChangelogsPage() {
                 ))}
               </SelectContent>
             </Select>
-            {/* <Link href="/dashboard/new">
-              <Button className="w-full sm:w-auto bg-sidebar text-primary hover:bg-sidebar/80">
-                <Plus className="mr-2 h-4 w-4" />
-                New Automation
-              </Button>
-            </Link> */}
           </div>
         </div>
       </div>
 
       <section className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-semibold">Automated Generation</h2>
+          <h2 className="text-xl font-semibold">
+            Automated Generation for {selectedProject}
+          </h2>
           <Dialog
             open={scheduleDialogOpen}
             onOpenChange={setScheduleDialogOpen}
           >
             <DialogTrigger asChild>
-              <Button className="bg-slate-100 text-slate-900 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700">
+              <Button className="bg-sidebar-100 text-sidebar-900 hover:bg-sidebar-200 dark:bg-sidebar-800 dark:text-sidebar-100 dark:hover:bg-sidebar-700 border border-sidebar-200 dark:border-sidebar-700">
                 <Calendar className="mr-2 h-4 w-4" />
                 Add Schedule
               </Button>
@@ -318,14 +314,14 @@ export default function ChangelogsPage() {
           </Dialog>
         </div>
 
-        <Card className="border-slate-200 dark:border-slate-700 shadow-md">
+        <Card className="border-sidebar-200 dark:border-sidebar-700 shadow-md">
           <CardContent className="pt-6">
             {schedules.length > 0 ? (
               <div className="space-y-4">
                 {schedules.map((schedule) => (
                   <div
                     key={schedule.id}
-                    className="flex items-center justify-between p-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50"
+                    className="flex items-center justify-between p-3 rounded-lg border border-sidebar-200 dark:border-sidebar-700 bg-sidebar-50 dark:bg-sidebar-900/50"
                   >
                     <div className="flex items-center gap-3">
                       <div
