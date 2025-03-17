@@ -89,6 +89,8 @@ export default function NewChangelogForm() {
 
   const [responseStyle, setResponseStyle] = useState("non-technical");
 
+  const [branches, setBranches] = useState<any[]>([]);
+  const [selectedBranch, setSelectedBranch] = useState("");
   // -----------------------------
   // 1) Load Existing Draft if present
   // -----------------------------
@@ -187,6 +189,35 @@ export default function NewChangelogForm() {
     handleFetchRepos();
     handleFetchUser();
   }, []);
+
+  const handleFetchBranches = async (owner: string, repo: string) => {
+    const response = await axios.get(
+      `${process.env.NEXT_PUBLIC_API_URL}/api/github/branches`,
+      {
+        params: { owner, repo },
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("clerk-authToken")}`,
+        },
+      }
+    );
+    console.log(response.data, "response from branches");
+    setBranches(response.data);
+    if (response.data.length > 0) {
+      const defaultBranch = response.data.find(
+        (branch: any) => branch.name === "master" || branch.name === "main"
+      );
+      if (defaultBranch) {
+        setSelectedBranch(defaultBranch.name);
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (selectedRepo) {
+      const [owner, repo] = selectedRepo.split("/");
+      handleFetchBranches(owner, repo);
+    }
+  }, [selectedRepo]);
 
   const handleFetchUser = async () => {
     try {
@@ -434,14 +465,23 @@ export default function NewChangelogForm() {
             )}
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-2 flex-1">
             <Label htmlFor="version">Branch</Label>
-            <Input
-              id="version"
-              placeholder="e.g. main"
-              value={version}
-              onChange={(e) => setVersion(e.target.value)}
-            />
+            <Select
+              value={selectedBranch}
+              onValueChange={(value) => setSelectedBranch(value)}
+            >
+              <SelectTrigger className="w-[100%]">
+                <SelectValue placeholder="Select branch" />
+              </SelectTrigger>
+              <SelectContent>
+                {branches.map((branch) => (
+                  <SelectItem key={branch.name} value={branch.name}>
+                    {branch.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div className="space-y-2">
             <Label htmlFor="version">Version</Label>
