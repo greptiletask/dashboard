@@ -19,6 +19,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
+import { marked } from "marked";    
 import {
   Card,
   CardContent,
@@ -184,12 +185,8 @@ export default function ScanPage() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Github className="h-5 w-5" />
-          Changelog Generator
+          Scan a public repository
         </CardTitle>
-        <CardDescription>
-          Generate changelogs for public GitHub repositories by providing the
-          repository URL, date range, and branch.
-        </CardDescription>
       </CardHeader>
       <CardContent>
         <Form {...form}>
@@ -367,7 +364,12 @@ export default function ScanPage() {
               </div>
             </div>
             <div className="mt-4 rounded-md bg-muted p-4">
-              <pre className="whitespace-pre-wrap text-sm">{changelog}</pre>
+              <div
+                className="markdown-content"
+                dangerouslySetInnerHTML={{
+                  __html: marked(changelog),
+                }}
+              />
             </div>
           </div>
         )}
