@@ -10,6 +10,7 @@ import {
   Globe,
   Sparkles,
   Zap,
+  Search,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -43,9 +44,9 @@ const data = {
           icon: Sparkles,
         },
         {
-          title: "Changelogs",
-          url: "/dashboard/changelogs",
-          icon: FileText,
+          title: "Scan",
+          url: "/dashboard/scan",
+          icon: Search,
         },
         {
           title: "Automations",
